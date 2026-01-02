@@ -11,8 +11,8 @@ import {
 } from '@expo-google-fonts/orbitron';
 
 // Screens
-import Login from './src/screens/LoginScreen';
-import SignUp from './src/screens/SignUpScreen';
+import Login from './src/screens/auth/LoginScreen';
+import SignUp from './src/screens/auth/SignUpScreen';
 import { COLORS } from './src/constants/theme';
 
 export default function App() {

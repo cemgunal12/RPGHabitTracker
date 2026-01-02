@@ -13,7 +13,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { COLORS, FONTS } from '../constants/theme';
+import { COLORS, FONTS } from '../../constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
