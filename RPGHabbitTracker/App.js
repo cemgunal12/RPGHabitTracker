@@ -16,16 +16,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { GameProvider, useGame } from './src/context/GameContext';
 import { COLORS } from './src/constants/theme';
 
-// --- EKRANLAR (Dosya isimleri güncellendi) ---
-// Not: Eğer dosyaların "auth" veya "dashboard" gibi alt klasörlerdeyse
-// yolları './src/screens/auth/LoginScreen' şeklinde güncellemen gerekebilir.
+// --- SCREENS ---
+// Check file paths according to their actual locations in the project (keep as is if auth folder doesn't exist)
 import Login from './src/screens/auth/LoginScreen';
 import SignUp from './src/screens/auth/SignUpScreen';
-import Dashboard from './src/screens/DashboardScreen'; // Dosya adın DashBoardScreen ise B'yi büyüt
+import Dashboard from './src/screens/DashboardScreen';
 import Habits from './src/screens/HabitsScreen';
+import Profile from './src/screens/ProfileScreen';
 import { QuestCompleteModal } from './src/components/rpg/QuestCompleteModal';
 
-// --- NAVİGASYON BİLEŞENİ ---
+// --- NAVIGATION BUTTON COMPONENT ---
 const TabButton = ({ title, icon, isActive, onPress }) => (
   <TouchableOpacity onPress={onPress} style={styles.tabButton}>
     <MaterialCommunityIcons
@@ -42,59 +42,41 @@ const TabButton = ({ title, icon, isActive, onPress }) => (
 const MainLayout = () => {
   const { gameState, gainXp, earnGold, setUsername } = useGame();
 
-  // State'ler
+  // Default landing page is Dashboard
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [authMode, setAuthMode] = useState('Login');
 
-  // Modal State'leri
+  // Modal State
   const [showModal, setShowModal] = useState(false);
-  const [modalData, setModalData] = useState({
-    questName: '',
-    xp: 0,
-    gold: 0,
-    stat: null
-  });
+  const [modalData, setModalData] = useState({ questName: '', xp: 0, gold: 0, stat: null });
   const [levelUpData, setLevelUpData] = useState({ isLevelUp: false, newLevel: 1 });
 
-  // Görevler Listesi
+  // Temporary Quest Data
   const [habits, setHabits] = useState([
-    { id: '1', name: 'Kitap Oku (30 dk)', stat: 'knowledge', difficulty: 'easy', completed: false, streak: 3, type: 'daily' },
-    { id: '2', name: 'Spor Yap', stat: 'vitality', difficulty: 'hard', completed: false, streak: 5, type: 'daily' },
-    { id: '3', name: 'Haftalık Rapor', stat: 'wealth', difficulty: 'medium', completed: false, streak: 0, type: 'weekly' },
+    { id: '1', name: 'Read Book (30m)', stat: 'knowledge', difficulty: 'easy', completed: false, streak: 3, type: 'daily' },
+    { id: '2', name: 'Workout', stat: 'vitality', difficulty: 'hard', completed: false, streak: 5, type: 'daily' },
+    { id: '3', name: 'Weekly Review', stat: 'wealth', difficulty: 'medium', completed: false, streak: 0, type: 'weekly' },
   ]);
 
-  // --- GÖREV TAMAMLAMA MANTIĞI ---
+  // Quest Completion Function
   const handleCompleteHabit = (id) => {
     const habit = habits.find(h => h.id === id);
     if (habit && !habit.completed) {
-
-      // 1. Listeyi güncelle
       setHabits(habits.map(h => h.id === id ? { ...h, completed: true, streak: h.streak + 1 } : h));
 
-      // 2. Ödülleri Hesapla
-      let xp = 10;
-      let gold = 5;
+      let xp = 10, gold = 5;
       if (habit.difficulty === 'medium') { xp = 25; gold = 15; }
       if (habit.difficulty === 'hard') { xp = 50; gold = 30; }
       if (habit.type === 'weekly') { xp *= 2; gold *= 2; }
 
-      // 3. Stat Ödülü
-      const statReward = { name: habit.stat, amount: 1 };
-
-      // 4. Context'e gönder
       const oldLevel = gameState.level;
       gainXp(xp);
       earnGold(gold);
 
-      // 5. Modalı Tetikle
-      setModalData({ questName: habit.name, xp, gold, stat: statReward });
+      setModalData({ questName: habit.name, xp, gold, stat: { name: habit.stat, amount: 1 } });
 
-      // Tahmini Level Kontrolü
       const predictedLevel = (gameState.currentXP + xp) >= gameState.maxXP ? gameState.level + 1 : gameState.level;
-      setLevelUpData({
-        isLevelUp: predictedLevel > oldLevel,
-        newLevel: predictedLevel
-      });
+      setLevelUpData({ isLevelUp: predictedLevel > oldLevel, newLevel: predictedLevel });
 
       setShowModal(true);
     }
@@ -108,7 +90,7 @@ const MainLayout = () => {
     setHabits(habits.filter(h => h.id !== id));
   };
 
-  // --- LOGIN EKRANI KONTROLÜ ---
+  // Login Check
   if (!gameState.username || gameState.username === 'Adventurer') {
     return authMode === 'Login' ? (
       <Login onLogin={(u) => setUsername(u)} onNavigateToSignUp={() => setAuthMode('SignUp')} />
@@ -121,7 +103,7 @@ const MainLayout = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-      {/* İÇERİK */}
+      {/* --- MAIN CONTENT AREA --- */}
       <View style={styles.content}>
         {activeTab === 'Dashboard' && <Dashboard habits={habits} />}
         {activeTab === 'Quests' && (
@@ -132,12 +114,21 @@ const MainLayout = () => {
             onDeleteHabit={handleDeleteHabit}
           />
         )}
+        {activeTab === 'Profile' && <Profile />}
       </View>
 
-      {/* ALT MENÜ */}
+      {/* --- BOTTOM MENU (TAB BAR) --- */}
       <View style={styles.tabBar}>
-        <TabButton title="Home" icon="view-dashboard" isActive={activeTab === 'Dashboard'} onPress={() => setActiveTab('Dashboard')} />
 
+        {/* 1. LEFT: PROFILE */}
+        <TabButton
+          title="Profile"
+          icon="account"
+          isActive={activeTab === 'Profile'}
+          onPress={() => setActiveTab('Profile')}
+        />
+
+        {/* 2. CENTER: QUESTS (SWORD) */}
         <View style={{ top: -20 }}>
           <TouchableOpacity onPress={() => setActiveTab('Quests')} style={styles.centerButton}>
             <LinearGradient colors={[COLORS.primary, COLORS.secondary]} style={styles.centerGradient}>
@@ -146,7 +137,14 @@ const MainLayout = () => {
           </TouchableOpacity>
         </View>
 
-        <TabButton title="Quests" icon="target" isActive={activeTab === 'Quests'} onPress={() => setActiveTab('Quests')} />
+        {/* 3. RIGHT: HOME (DASHBOARD) */}
+        <TabButton
+          title="Home"
+          icon="view-dashboard"
+          isActive={activeTab === 'Dashboard'}
+          onPress={() => setActiveTab('Dashboard')}
+        />
+
       </View>
 
       {/* MODAL */}

@@ -1,20 +1,20 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  Modal, 
-  TouchableOpacity, 
-  Animated, 
-  Dimensions 
+import {
+  StyleSheet,
+  Text,
+  View,
+  Modal,
+  TouchableOpacity,
+  Animated,
+  Dimensions
 } from 'react-native';
 import { Trophy, Sparkles, Star, Zap, Coins } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, FONTS } from '../../constants/theme'; // Tema dosyanın yolu
+import { COLORS, FONTS } from '../../constants/theme'; // Theme file path
 
 const { width, height } = Dimensions.get('window');
 
-// --- ALT BİLEŞEN: Ödül Satırı (Tekrar eden kodları önlemek için) ---
+// --- SUB-COMPONENT: Reward Row (To prevent repeating code) ---
 const RewardItem = ({ icon: Icon, color, label, amount, suffix = '' }) => (
   <LinearGradient
     colors={[`${color}33`, 'transparent']} // %20 opacity (hex 33)
@@ -34,7 +34,7 @@ const RewardItem = ({ icon: Icon, color, label, amount, suffix = '' }) => (
   </LinearGradient>
 );
 
-// --- ALT BİLEŞEN: Konfeti Efekti (Basit Animasyon) ---
+// --- SUB-COMPONENT: Confetti Effect (Simple Animation) ---
 const ConfettiStar = ({ delay, color, style }) => {
   const animValue = useRef(new Animated.Value(-50)).current;
 
@@ -58,7 +58,7 @@ const ConfettiStar = ({ delay, color, style }) => {
   );
 };
 
-// --- ANA BİLEŞEN: QuestCompleteModal ---
+// --- MAIN COMPONENT: QuestCompleteModal ---
 export function QuestCompleteModal({
   isOpen,
   onClose,
@@ -92,7 +92,7 @@ export function QuestCompleteModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        
+
         {/* 1. KONFETİ EFEKTİ */}
         {showConfetti && (
           <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
@@ -116,8 +116,8 @@ export function QuestCompleteModal({
           />
 
           <View style={styles.cardContent}>
-            
-            {/* HEADER KISMI */}
+
+            {/* HEADER SECTION */}
             <View style={styles.header}>
               {isLevelUp ? (
                 <>
@@ -156,28 +156,28 @@ export function QuestCompleteModal({
 
             {/* ÖDÜLLER LİSTESİ */}
             <View style={styles.rewardsContainer}>
-              <RewardItem 
-                icon={Zap} 
+              <RewardItem
+                icon={Zap}
                 color={COLORS.primary} // #8A2BE2
-                label="Experience" 
-                amount={xpGained} 
-                suffix=" XP" 
+                label="Experience"
+                amount={xpGained}
+                suffix=" XP"
               />
 
-              <RewardItem 
-                icon={Coins} 
-                color="#FFD700" 
-                label="Gold" 
-                amount={goldGained} 
-                suffix="g" 
+              <RewardItem
+                icon={Coins}
+                color="#FFD700"
+                label="Gold"
+                amount={goldGained}
+                suffix="g"
               />
 
               {statGained && (
-                <RewardItem 
-                  icon={Star} 
+                <RewardItem
+                  icon={Star}
                   color={COLORS.secondary} // #00F0FF
-                  label={statGained.name} 
-                  amount={statGained.amount} 
+                  label={statGained.name}
+                  amount={statGained.amount}
                 />
               )}
             </View>
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  
+
   // Confetti
   confetti: {
     position: 'absolute',
