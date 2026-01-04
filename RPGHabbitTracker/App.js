@@ -16,16 +16,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { GameProvider, useGame } from './src/context/GameContext';
 import { COLORS } from './src/constants/theme';
 
-// --- SCREENS ---
-// Check file paths according to their actual locations in the project (keep as is if auth folder doesn't exist)
+// --- EKRANLAR ---
 import Login from './src/screens/auth/LoginScreen';
 import SignUp from './src/screens/auth/SignUpScreen';
 import Dashboard from './src/screens/DashboardScreen';
 import Habits from './src/screens/HabitsScreen';
 import Profile from './src/screens/ProfileScreen';
+import Boss from './src/screens/BossScreen';
+import Leaderboard from './src/screens/LeaderboardScreen'; // YENİ EKLENDİ
 import { QuestCompleteModal } from './src/components/rpg/QuestCompleteModal';
 
-// --- NAVIGATION BUTTON COMPONENT ---
 const TabButton = ({ title, icon, isActive, onPress }) => (
   <TouchableOpacity onPress={onPress} style={styles.tabButton}>
     <MaterialCommunityIcons
@@ -42,28 +42,26 @@ const TabButton = ({ title, icon, isActive, onPress }) => (
 const MainLayout = () => {
   const { gameState, gainXp, earnGold, setUsername } = useGame();
 
-  // Default landing page is Dashboard
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [authMode, setAuthMode] = useState('Login');
-
+  
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ questName: '', xp: 0, gold: 0, stat: null });
   const [levelUpData, setLevelUpData] = useState({ isLevelUp: false, newLevel: 1 });
 
-  // Temporary Quest Data
+  // Dummy Habits
   const [habits, setHabits] = useState([
     { id: '1', name: 'Read Book (30m)', stat: 'knowledge', difficulty: 'easy', completed: false, streak: 3, type: 'daily' },
     { id: '2', name: 'Workout', stat: 'vitality', difficulty: 'hard', completed: false, streak: 5, type: 'daily' },
     { id: '3', name: 'Weekly Review', stat: 'wealth', difficulty: 'medium', completed: false, streak: 0, type: 'weekly' },
   ]);
 
-  // Quest Completion Function
   const handleCompleteHabit = (id) => {
     const habit = habits.find(h => h.id === id);
     if (habit && !habit.completed) {
       setHabits(habits.map(h => h.id === id ? { ...h, completed: true, streak: h.streak + 1 } : h));
-
+      
       let xp = 10, gold = 5;
       if (habit.difficulty === 'medium') { xp = 25; gold = 15; }
       if (habit.difficulty === 'hard') { xp = 50; gold = 30; }
@@ -74,10 +72,8 @@ const MainLayout = () => {
       earnGold(gold);
 
       setModalData({ questName: habit.name, xp, gold, stat: { name: habit.stat, amount: 1 } });
-
       const predictedLevel = (gameState.currentXP + xp) >= gameState.maxXP ? gameState.level + 1 : gameState.level;
       setLevelUpData({ isLevelUp: predictedLevel > oldLevel, newLevel: predictedLevel });
-
       setShowModal(true);
     }
   };
@@ -90,7 +86,6 @@ const MainLayout = () => {
     setHabits(habits.filter(h => h.id !== id));
   };
 
-  // Login Check
   if (!gameState.username || gameState.username === 'Adventurer') {
     return authMode === 'Login' ? (
       <Login onLogin={(u) => setUsername(u)} onNavigateToSignUp={() => setAuthMode('SignUp')} />
@@ -103,7 +98,7 @@ const MainLayout = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-      {/* --- MAIN CONTENT AREA --- */}
+      {/* İÇERİK */}
       <View style={styles.content}>
         {activeTab === 'Dashboard' && <Dashboard habits={habits} />}
         {activeTab === 'Quests' && (
@@ -115,39 +110,56 @@ const MainLayout = () => {
           />
         )}
         {activeTab === 'Profile' && <Profile />}
+        {activeTab === 'Boss' && <Boss />}
+        {activeTab === 'Leaderboard' && <Leaderboard />} {/* YENİ */}
       </View>
 
-      {/* --- BOTTOM MENU (TAB BAR) --- */}
+      {/* ALT MENÜ */}
       <View style={styles.tabBar}>
-
-        {/* 1. LEFT: PROFILE */}
-        <TabButton
-          title="Profile"
-          icon="account"
-          isActive={activeTab === 'Profile'}
-          onPress={() => setActiveTab('Profile')}
+        
+        {/* SOL: Profile */}
+        <TabButton 
+          title="Profile" 
+          icon="account" 
+          isActive={activeTab === 'Profile'} 
+          onPress={() => setActiveTab('Profile')} 
         />
 
-        {/* 2. CENTER: QUESTS (SWORD) */}
+        {/* SOL-ORTA: Quests */}
+        <TabButton 
+          title="Quests" 
+          icon="format-list-checks" 
+          isActive={activeTab === 'Quests'} 
+          onPress={() => setActiveTab('Quests')} 
+        />
+
+        {/* ORTA: BOSS (Action) */}
         <View style={{ top: -20 }}>
-          <TouchableOpacity onPress={() => setActiveTab('Quests')} style={styles.centerButton}>
-            <LinearGradient colors={[COLORS.primary, COLORS.secondary]} style={styles.centerGradient}>
+          <TouchableOpacity onPress={() => setActiveTab('Boss')} style={styles.centerButton}>
+            <LinearGradient colors={['#FF3F3F', '#FF1744']} style={styles.centerGradient}>
               <MaterialCommunityIcons name="sword" size={32} color="#FFF" />
             </LinearGradient>
           </TouchableOpacity>
         </View>
 
-        {/* 3. RIGHT: HOME (DASHBOARD) */}
-        <TabButton
-          title="Home"
-          icon="view-dashboard"
-          isActive={activeTab === 'Dashboard'}
-          onPress={() => setActiveTab('Dashboard')}
+        {/* SAĞ-ORTA: Leaderboard (Shop yerine geçici olarak) */}
+        <TabButton 
+          title="Ranking" 
+          icon="podium" 
+          isActive={activeTab === 'Leaderboard'} 
+          onPress={() => setActiveTab('Leaderboard')} 
+        />
+
+        {/* SAĞ: Home */}
+        <TabButton 
+          title="Home" 
+          icon="view-dashboard" 
+          isActive={activeTab === 'Dashboard'} 
+          onPress={() => setActiveTab('Dashboard')} 
         />
 
       </View>
 
-      {/* MODAL */}
       <QuestCompleteModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -185,8 +197,8 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
   content: { flex: 1 },
   tabBar: { flexDirection: 'row', height: 80, backgroundColor: '#1E1E1E', borderTopWidth: 1, borderTopColor: 'rgba(138,43,226,0.2)', alignItems: 'center', justifyContent: 'space-around', paddingBottom: 20 },
-  tabButton: { alignItems: 'center', padding: 10 },
-  tabText: { fontSize: 10, marginTop: 4, fontFamily: 'Orbitron_500Medium' },
+  tabButton: { alignItems: 'center', padding: 5 },
+  tabText: { fontSize: 9, marginTop: 4, fontFamily: 'Orbitron_500Medium' },
   centerButton: { width: 64, height: 64, borderRadius: 32, elevation: 10 },
   centerGradient: { flex: 1, borderRadius: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#121212' }
 });
