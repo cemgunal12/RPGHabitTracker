@@ -19,7 +19,7 @@ import { COLORS } from './src/constants/theme';
 // --- EKRANLAR ---
 import Login from './src/screens/auth/LoginScreen';
 import SignUp from './src/screens/auth/SignUpScreen';
-import Dashboard from './src/screens/DashboardScreen';
+import Dashboard from './src/screens/TempScreen';
 import Habits from './src/screens/HabitsScreen';
 import Profile from './src/screens/ProfileScreen';
 import Boss from './src/screens/BossScreen';

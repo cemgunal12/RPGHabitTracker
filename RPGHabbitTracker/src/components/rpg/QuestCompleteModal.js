@@ -1,64 +1,54 @@
 import React, { useEffect, useState, useRef } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Modal,
-  TouchableOpacity,
-  Animated,
-  Dimensions
-} from 'react-native';
-import { Trophy, Sparkles, Star, Zap, Coins } from 'lucide-react-native';
+import { StyleSheet, Text, View, Modal, TouchableOpacity, Animated, Easing, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, FONTS } from '../../constants/theme'; // Theme file path
+// İkonları garanti olsun diye sadece lucide-react-native'den çekiyoruz
+import { Trophy, Sparkles, Zap, Star, Coins } from 'lucide-react-native';
+import { FONTS } from '../../constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
-// --- SUB-COMPONENT: Reward Row (To prevent repeating code) ---
-const RewardItem = ({ icon: Icon, color, label, amount, suffix = '' }) => (
-  <LinearGradient
-    colors={[`${color}33`, 'transparent']} // %20 opacity (hex 33)
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 0 }}
-    style={[styles.rewardRow, { borderColor: `${color}66` }]} // %40 opacity
-  >
-    <View style={styles.rewardLeft}>
-      <View style={[styles.rewardIconBox, { backgroundColor: color }]}>
-        <Icon color="#121212" size={16} fill="#121212" />
-      </View>
-      <Text style={styles.rewardLabel}>{label}</Text>
-    </View>
-    <Text style={[styles.rewardAmount, { color: color }]}>
-      +{amount}{suffix}
-    </Text>
-  </LinearGradient>
-);
-
-// --- SUB-COMPONENT: Confetti Effect (Simple Animation) ---
-const ConfettiStar = ({ delay, color, style }) => {
-  const animValue = useRef(new Animated.Value(-50)).current;
+// Basit Konfeti Parçacığı
+const ConfettiPiece = ({ delay, color, startX }) => {
+  const animY = useRef(new Animated.Value(-50)).current;
+  const animRotate = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.loop(
-      Animated.sequence([
-        Animated.timing(animValue, {
+      Animated.parallel([
+        Animated.timing(animY, {
           toValue: height,
           duration: 2000 + Math.random() * 1000,
           delay: delay,
+          easing: Easing.linear,
+          useNativeDriver: true, // Native driver performans için true olmalı
+        }),
+        Animated.timing(animRotate, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
           useNativeDriver: true,
         })
       ])
     ).start();
   }, []);
 
+  const rotate = animRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
   return (
-    <Animated.View style={[styles.confetti, style, { transform: [{ translateY: animValue }] }]}>
-      <Star color={color} fill={color} size={16} />
+    <Animated.View style={{
+      position: 'absolute',
+      left: startX,
+      top: animY,
+      transform: [{ rotate }]
+    }}>
+      <Star size={16} fill={color} stroke="none" color={color} />
     </Animated.View>
   );
 };
 
-// --- MAIN COMPONENT: QuestCompleteModal ---
 export function QuestCompleteModal({
   isOpen,
   onClose,
@@ -74,60 +64,50 @@ export function QuestCompleteModal({
   useEffect(() => {
     if (isOpen) {
       setShowConfetti(true);
-      const timer = setTimeout(() => {
-        setShowConfetti(false);
-      }, 3000);
+      const timer = setTimeout(() => setShowConfetti(false), 4000);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // Modal kapalıysa null döndür
   if (!isOpen) return null;
 
   return (
     <Modal
-      transparent={true}
       visible={isOpen}
+      transparent
       animationType="fade"
-      onRequestClose={onClose}
+      statusBarTranslucent
     >
       <View style={styles.overlay}>
-
-        {/* 1. KONFETİ EFEKTİ */}
+        
+        {/* Konfeti Efekti */}
         {showConfetti && (
-          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            {[...Array(15)].map((_, i) => (
-              <ConfettiStar
-                key={i}
-                delay={Math.random() * 1000}
-                color={i % 3 === 0 ? '#FFD700' : i % 3 === 1 ? '#8A2BE2' : '#00F0FF'}
-                style={{ left: Math.random() * width }}
-              />
-            ))}
-          </View>
+           <View style={StyleSheet.absoluteFill} pointerEvents="none">
+             {[...Array(15)].map((_, i) => (
+               <ConfettiPiece 
+                 key={i} 
+                 delay={Math.random() * 1000} 
+                 startX={Math.random() * width}
+                 color={i % 3 === 0 ? '#FFD700' : i % 3 === 1 ? '#8A2BE2' : '#00F0FF'}
+               />
+             ))}
+           </View>
         )}
 
-        {/* 2. ANA KART */}
+        {/* Ana Kart */}
         <View style={styles.cardContainer}>
-          {/* Arkadaki Glow Efekti */}
-          <LinearGradient
-            colors={[COLORS.primary, COLORS.secondary]}
-            style={styles.cardGlow}
-          />
-
-          <View style={styles.cardContent}>
-
-            {/* HEADER SECTION */}
+          {/* Arka Plan Glow */}
+          <View style={styles.glow} />
+          
+          <View style={styles.card}>
+            
+            {/* Header */}
             <View style={styles.header}>
               {isLevelUp ? (
                 <>
-                  <View style={styles.iconWrapper}>
-                    <View style={styles.iconGlow} />
-                    <LinearGradient
-                      colors={[COLORS.primary, COLORS.secondary]}
-                      style={styles.iconCircle}
-                    >
-                      <Trophy color="#FFF" size={48} />
+                  <View style={styles.iconWrapperLarge}>
+                    <LinearGradient colors={['#8A2BE2', '#00F0FF']} style={styles.iconGradientLarge}>
+                      <Trophy size={48} color="#FFF" />
                     </LinearGradient>
                   </View>
                   <Text style={styles.levelUpTitle}>LEVEL UP!</Text>
@@ -136,59 +116,66 @@ export function QuestCompleteModal({
               ) : (
                 <>
                   <View style={styles.iconWrapper}>
-                    <View style={[styles.iconGlow, { backgroundColor: COLORS.secondary }]} />
-                    <LinearGradient
-                      colors={[COLORS.secondary, COLORS.primary]}
-                      style={styles.iconCircle}
-                    >
-                      <Sparkles color="#FFF" size={40} />
+                    <LinearGradient colors={['#00F0FF', '#8A2BE2']} style={styles.iconGradient}>
+                      <Sparkles size={32} color="#FFF" />
                     </LinearGradient>
                   </View>
-                  <Text style={styles.questCompleteTitle}>Quest Complete!</Text>
+                  <Text style={styles.completeTitle}>Quest Complete!</Text>
                 </>
               )}
             </View>
 
-            {/* QUEST NAME */}
+            {/* Quest Name */}
             <View style={styles.questNameBox}>
               <Text style={styles.questNameText}>{questName}</Text>
             </View>
 
-            {/* ÖDÜLLER LİSTESİ */}
+            {/* Rewards */}
             <View style={styles.rewardsContainer}>
-              <RewardItem
-                icon={Zap}
-                color={COLORS.primary} // #8A2BE2
-                label="Experience"
-                amount={xpGained}
-                suffix=" XP"
-              />
+              {/* XP */}
+              <View style={[styles.rewardRow, { borderColor: 'rgba(138,43,226,0.4)', backgroundColor: 'rgba(138,43,226,0.1)' }]}>
+                <View style={{flexDirection:'row', gap: 8, alignItems:'center'}}>
+                   <View style={{backgroundColor:'#8A2BE2', borderRadius:6, padding:4}}>
+                     <Zap size={14} color="#FFF" />
+                   </View>
+                   <Text style={styles.rewardLabel}>Experience</Text>
+                </View>
+                <Text style={[styles.rewardValue, { color: '#8A2BE2' }]}>+{xpGained} XP</Text>
+              </View>
 
-              <RewardItem
-                icon={Coins}
-                color="#FFD700"
-                label="Gold"
-                amount={goldGained}
-                suffix="g"
-              />
+              {/* Gold */}
+              <View style={[styles.rewardRow, { borderColor: 'rgba(255,215,0,0.4)', backgroundColor: 'rgba(255,215,0,0.1)' }]}>
+                <View style={{flexDirection:'row', gap: 8, alignItems:'center'}}>
+                   <View style={{backgroundColor:'#FFD700', borderRadius:6, padding:4}}>
+                     <Coins size={14} color="#000" />
+                   </View>
+                   <Text style={styles.rewardLabel}>Gold</Text>
+                </View>
+                <Text style={[styles.rewardValue, { color: '#FFD700' }]}>+{goldGained}g</Text>
+              </View>
 
+              {/* Stat */}
               {statGained && (
-                <RewardItem
-                  icon={Star}
-                  color={COLORS.secondary} // #00F0FF
-                  label={statGained.name}
-                  amount={statGained.amount}
-                />
+                <View style={[styles.rewardRow, { borderColor: 'rgba(0,240,255,0.4)', backgroundColor: 'rgba(0,240,255,0.1)' }]}>
+                  <View style={{flexDirection:'row', gap: 8, alignItems:'center'}}>
+                     <View style={{backgroundColor:'#00F0FF', borderRadius:6, padding:4}}>
+                       <Star size={14} color="#000" />
+                     </View>
+                     <Text style={[styles.rewardLabel, {textTransform:'capitalize'}]}>{statGained.name}</Text>
+                  </View>
+                  <Text style={[styles.rewardValue, { color: '#00F0FF' }]}>+{statGained.amount}</Text>
+                </View>
               )}
             </View>
 
-            {/* DEVAM BUTONU */}
+            {/* Button */}
             <TouchableOpacity onPress={onClose} activeOpacity={0.8}>
               <LinearGradient
-                colors={[COLORS.primary, COLORS.secondary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.continueButton}
+                colors={['#8A2BE2', '#00F0FF']}
+                // --- DÜZELTME BURADA YAPILDI (Array Formatı) ---
+                start={[0, 0]} 
+                end={[1, 0]}
+                style={styles.button}
               >
                 <Text style={styles.buttonText}>Continue</Text>
               </LinearGradient>
@@ -201,164 +188,31 @@ export function QuestCompleteModal({
   );
 }
 
-// --- STYLES (CSS CLASSES KARŞILIĞI) ---
 const styles = StyleSheet.create({
-  // Genel Overlay (bg-black/80 backdrop-blur-sm)
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  cardContainer: { width: '100%', maxWidth: 360, position: 'relative' },
+  // Glow stilini biraz basitleştirdik ki hata vermesin
+  glow: { position: 'absolute', top: -4, left: -4, right: -4, bottom: -4, borderRadius: 24, backgroundColor: 'rgba(138,43,226,0.3)' },
+  card: { backgroundColor: '#1E1E1E', borderRadius: 20, padding: 24, borderWidth: 2, borderColor: '#8A2BE2' },
+  
+  header: { alignItems: 'center', marginBottom: 20 },
+  iconWrapper: { marginBottom: 12 },
+  iconGradient: { padding: 12, borderRadius: 30 },
+  iconWrapperLarge: { marginBottom: 16 },
+  iconGradientLarge: { padding: 20, borderRadius: 50 },
+  
+  completeTitle: { color: '#FFF', fontSize: 24, fontFamily: FONTS.bold },
+  levelUpTitle: { fontSize: 32, fontFamily: FONTS.bold, color: '#00F0FF' }, 
+  levelText: { color: '#FFF', fontSize: 18 },
 
-  // Confetti
-  confetti: {
-    position: 'absolute',
-    top: -50,
-  },
+  questNameBox: { backgroundColor: '#121212', padding: 10, borderRadius: 10, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(138,43,226,0.3)' },
+  questNameText: { color: '#00F0FF', textAlign: 'center', fontFamily: FONTS.medium },
 
-  // Kart Yapısı
-  cardContainer: {
-    width: '100%',
-    maxWidth: 380,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  cardGlow: {
-    position: 'absolute',
-    top: -4, left: -4, right: -4, bottom: -4,
-    borderRadius: 28,
-    opacity: 0.4,
-  },
-  cardContent: {
-    width: '100%',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    // Shadow
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
-  },
+  rewardsContainer: { gap: 10, marginBottom: 24 },
+  rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, borderRadius: 12, borderWidth: 1 },
+  rewardLabel: { color: '#FFF', fontSize: 14 },
+  rewardValue: { fontSize: 14, fontFamily: FONTS.bold },
 
-  // Header
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  iconWrapper: {
-    width: 80,
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    position: 'relative',
-  },
-  iconGlow: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    borderRadius: 40,
-    backgroundColor: COLORS.primary,
-    opacity: 0.6,
-  },
-  iconCircle: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  levelUpTitle: {
-    fontSize: 28,
-    fontFamily: FONTS.bold,
-    color: COLORS.primary, // Gradient text zor olduğu için primary renk
-    marginBottom: 4,
-    textShadowColor: COLORS.secondary,
-    textShadowRadius: 10,
-  },
-  levelText: {
-    color: '#FFF',
-    fontSize: 20,
-    fontFamily: FONTS.medium,
-  },
-  questCompleteTitle: {
-    fontSize: 24,
-    fontFamily: FONTS.bold,
-    color: '#FFF',
-  },
-
-  // Quest Name Box
-  questNameBox: {
-    backgroundColor: '#121212',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(138,43,226,0.3)',
-    width: '100%',
-  },
-  questNameText: {
-    color: COLORS.secondary,
-    textAlign: 'center',
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-  },
-
-  // Rewards Area
-  rewardsContainer: {
-    gap: 12,
-    marginBottom: 24,
-    width: '100%',
-  },
-  rewardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  rewardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  rewardIconBox: {
-    padding: 6,
-    borderRadius: 8,
-  },
-  rewardLabel: {
-    color: '#FFF',
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    textTransform: 'capitalize',
-  },
-  rewardAmount: {
-    fontSize: 14,
-    fontFamily: FONTS.bold,
-  },
-
-  // Button
-  continueButton: {
-    width: '100%',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: COLORS.primary,
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontFamily: FONTS.bold,
-  },
+  button: { paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  buttonText: { color: '#FFF', fontSize: 16, fontFamily: FONTS.bold },
 });

@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 
-// --- IMPORT FIXES HERE ---
-// We're inside src/screens, so just go up one folder (../)
+// --- IMPORTLAR ---
 import { useGame } from '../context/GameContext';
 import { COLORS } from '../constants/theme';
 
-// Components (to reach src/components folder, single ../ is enough)
+// Bileşenler
 import HeroSection from '../components/rpg/HeroSection';
 import StatusBars from '../components/rpg/StatusBars';
 import StatsGrid from '../components/rpg/StatsGrid';
 import BossWidget from '../components/rpg/BossWidget';
+import CalendarModal from '../components/rpg/CalendarModal'; // YENİ EKLENDİ
 
 export default function DashboardScreen({ habits }) {
   const { gameState } = useGame();
 
-  // Sample Boss Data (Can be moved to Context later)
+  // --- YENİ: Takvim Modal State'i ---
+  const [isCalendarOpen, setCalendarOpen] = useState(false);
+
+  // Örnek Boss Verisi
   const bossData = {
     name: "Dark Dragon",
     health: 3500,
@@ -26,24 +29,24 @@ export default function DashboardScreen({ habits }) {
   };
 
   const handleNavigateBoss = () => {
-    // Navigation logic
-    alert("Attacking the Boss!");
+    alert("Boss sekmesine gidiliyor...");
   };
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
 
-        {/* 1. Top Section (Hero) */}
+        {/* 1. Üst Kısım (Hero) */}
         <HeroSection
           username={gameState.username}
           level={gameState.level}
           badge={gameState.equippedBadge}
-          streak={0}
-          onStreakPress={() => alert('Calendar Modal Will Open')}
+          streak={3} // Şimdilik sabit 3, habits verisinden hesaplanabilir
+          // --- GÜNCELLEME: Butona basınca state'i true yapıyoruz ---
+          onStreakPress={() => setCalendarOpen(true)}
         />
 
-        {/* 2. Bars (HP & XP) */}
+        {/* 2. Barlar (HP & XP) */}
         <StatusBars
           health={gameState.health}
           maxHealth={gameState.maxHealth}
@@ -51,7 +54,7 @@ export default function DashboardScreen({ habits }) {
           maxXP={gameState.maxXP}
         />
 
-        {/* 3. Stats */}
+        {/* 3. Statlar */}
         <StatsGrid stats={gameState.stats} />
 
         {/* 4. Boss Widget */}
@@ -61,6 +64,14 @@ export default function DashboardScreen({ habits }) {
         />
 
       </ScrollView>
+
+      {/* --- YENİ: Takvim Modalı Buraya Eklendi --- */}
+      <CalendarModal
+        visible={isCalendarOpen}
+        onClose={() => setCalendarOpen(false)}
+        habits={habits} // App.js'den gelen habits verisini takvime gönderiyoruz
+      />
+
     </View>
   );
 }
