@@ -6,7 +6,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  Alert
 } from 'react-native';
 import { useFonts, Orbitron_400Regular, Orbitron_500Medium, Orbitron_700Bold } from '@expo-google-fonts/orbitron';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -23,7 +24,8 @@ import Dashboard from './src/screens/TempScreen';
 import Habits from './src/screens/HabitsScreen';
 import Profile from './src/screens/ProfileScreen';
 import Boss from './src/screens/BossScreen';
-import Leaderboard from './src/screens/LeaderboardScreen'; // YENİ EKLENDİ
+// import Leaderboard from './src/screens/LeaderboardScreen'; // Şimdilik kaldırdık veya Shop ile değiştirdik
+import Shop from './src/screens/ShopScreen'; // YENİ EKLENDİ
 import { QuestCompleteModal } from './src/components/rpg/QuestCompleteModal';
 
 const TabButton = ({ title, icon, isActive, onPress }) => (
@@ -40,6 +42,8 @@ const TabButton = ({ title, icon, isActive, onPress }) => (
 );
 
 const MainLayout = () => {
+  // Context'ten spendGold veya buyItem gibi bir fonksiyon gelmesi gerekir.
+  // Şimdilik sadece earnGold ve gameState var varsayıyoruz.
   const { gameState, gainXp, earnGold, setUsername } = useGame();
 
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -57,6 +61,7 @@ const MainLayout = () => {
     { id: '3', name: 'Weekly Review', stat: 'wealth', difficulty: 'medium', completed: false, streak: 0, type: 'weekly' },
   ]);
 
+  // --- HABIT ACTIONS ---
   const handleCompleteHabit = (id) => {
     const habit = habits.find(h => h.id === id);
     if (habit && !habit.completed) {
@@ -86,6 +91,20 @@ const MainLayout = () => {
     setHabits(habits.filter(h => h.id !== id));
   };
 
+  // --- SHOP ACTIONS ---
+  const handlePurchase = (item) => {
+    if (gameState.gold >= item.price) {
+      // NOT: Gerçek harcama için GameContext içinde 'spendGold' fonksiyonuna ihtiyacımız var.
+      // Şimdilik alert gösteriyoruz.
+      // spendGold(item.price); 
+      // addItemToInventory(item);
+      Alert.alert("Success!", `You bought ${item.name}. (Gold logic needs Context update)`);
+    } else {
+      Alert.alert("Insufficient Gold", "You need more gold to buy this item.");
+    }
+  };
+
+  // --- AUTH CHECK ---
   if (!gameState.username || gameState.username === 'Adventurer') {
     return authMode === 'Login' ? (
       <Login onLogin={(u) => setUsername(u)} onNavigateToSignUp={() => setAuthMode('SignUp')} />
@@ -98,9 +117,10 @@ const MainLayout = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-      {/* İÇERİK */}
+      {/* İÇERİK ALANI */}
       <View style={styles.content}>
         {activeTab === 'Dashboard' && <Dashboard habits={habits} />}
+        
         {activeTab === 'Quests' && (
           <Habits
             habits={habits}
@@ -109,12 +129,21 @@ const MainLayout = () => {
             onDeleteHabit={handleDeleteHabit}
           />
         )}
+        
         {activeTab === 'Profile' && <Profile />}
+        
         {activeTab === 'Boss' && <Boss />}
-        {activeTab === 'Leaderboard' && <Leaderboard />} {/* YENİ */}
+        
+        {/* Leaderboard yerine SHOP geldi */}
+        {activeTab === 'Shop' && (
+          <Shop 
+            gold={gameState.gold} 
+            onPurchase={handlePurchase} 
+          />
+        )}
       </View>
 
-      {/* ALT MENÜ */}
+      {/* ALT MENÜ (TAB BAR) */}
       <View style={styles.tabBar}>
         
         {/* SOL: Profile */}
@@ -142,12 +171,12 @@ const MainLayout = () => {
           </TouchableOpacity>
         </View>
 
-        {/* SAĞ-ORTA: Leaderboard (Shop yerine geçici olarak) */}
+        {/* SAĞ-ORTA: SHOP (Eski Ranking yeri) */}
         <TabButton 
-          title="Ranking" 
-          icon="podium" 
-          isActive={activeTab === 'Leaderboard'} 
-          onPress={() => setActiveTab('Leaderboard')} 
+          title="Shop" 
+          icon="store" // İkon değişti
+          isActive={activeTab === 'Shop'} 
+          onPress={() => setActiveTab('Shop')} 
         />
 
         {/* SAĞ: Home */}
