@@ -7,7 +7,9 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StatusBar,
-  Alert
+  Alert,
+  Image,
+  Platform
 } from 'react-native';
 import { useFonts, Orbitron_400Regular, Orbitron_500Medium, Orbitron_700Bold } from '@expo-google-fonts/orbitron';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,13 +22,67 @@ import { COLORS } from './src/constants/theme';
 // --- EKRANLAR ---
 import Login from './src/screens/auth/LoginScreen';
 import SignUp from './src/screens/auth/SignUpScreen';
-import Dashboard from './src/screens/TempScreen';
-import Habits from './src/screens/HabitsScreen';
+import Dashboard from './src/screens/TempScreen'; // Home
+import Habits from './src/screens/HabitsScreen'; // Quests
 import Profile from './src/screens/ProfileScreen';
 import Boss from './src/screens/BossScreen';
 import Shop from './src/screens/ShopScreen'; 
+
+// Leaderboard Placeholder
+const Leaderboard = () => (
+  <View style={{flex:1, justifyContent:'center', alignItems:'center'}}>
+    <Text style={{color:'white', fontFamily:'Orbitron_700Bold'}}>LEADERBOARD COMING SOON</Text>
+  </View>
+);
+
 import { QuestCompleteModal } from './src/components/rpg/QuestCompleteModal';
 
+// =====================================================================
+// --- ENTEGRE TOP BAR COMPONENT ---
+// =====================================================================
+const TopBar = ({ username, level, streak, onProfilePress }) => (
+  <View style={styles.topBarContainer}>
+    <LinearGradient
+      colors={['#1E1E1E', '#121212']} // Hafif bir geçiş
+      style={styles.topBarGradient}
+    >
+      <View style={styles.topBarContent}>
+        
+        {/* SOL: Profil İkonu, Avatar ve Nickname */}
+        <TouchableOpacity onPress={onProfilePress} style={styles.profileSection}>
+          <View style={styles.avatarContainer}>
+             <LinearGradient colors={[COLORS.primary, COLORS.secondary]} style={styles.avatarBorder}>
+                {/* DiceBear API ile Kullanıcı Adına Özel Avatar */}
+                <Image 
+                  source={{ uri: `https://api.dicebear.com/7.x/adventurer/png?seed=${username}` }} 
+                  style={styles.avatarImage} 
+                />
+             </LinearGradient>
+             <View style={styles.levelBadge}>
+                <Text style={styles.levelTextBadge}>{level}</Text>
+             </View>
+          </View>
+          
+          <View style={styles.nameContainer}>
+            <Text style={styles.usernameText} numberOfLines={1}>{username}</Text>
+            <Text style={styles.subtitleText}>Adventurer</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* SAĞ: Streak (Ateş) Sayacı */}
+        <View style={styles.streakBadge}>
+            <MaterialCommunityIcons name="fire" size={20} color="#FF3F3F" />
+            <Text style={styles.streakTextVal}>{streak}</Text>
+        </View>
+
+      </View>
+      {/* Alt Çizgi */}
+      <View style={styles.divider} />
+    </LinearGradient>
+  </View>
+);
+
+// --- TAB BUTTON COMPONENT ---
 const TabButton = ({ title, icon, isActive, onPress }) => (
   <TouchableOpacity onPress={onPress} style={styles.tabButton}>
     <MaterialCommunityIcons
@@ -41,7 +97,6 @@ const TabButton = ({ title, icon, isActive, onPress }) => (
 );
 
 const MainLayout = () => {
-  // GÜNCELLEME 1: Context'ten increaseStat ve buyItem fonksiyonlarını çektik
   const { gameState, gainXp, earnGold, increaseStat, buyItem, setUsername } = useGame();
 
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -59,7 +114,14 @@ const MainLayout = () => {
     { id: '3', name: 'Weekly Review', stat: 'wealth', difficulty: 'medium', completed: false, streak: 0, type: 'weekly' },
   ]);
 
-  // --- HABIT ACTIONS ---
+  // --- ACTIONS ---
+  const handleLogout = () => {
+    Alert.alert("Log Out", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Log Out", onPress: () => setUsername(null) }
+    ]);
+  };
+
   const handleCompleteHabit = (id) => {
     const habit = habits.find(h => h.id === id);
     if (habit && !habit.completed) {
@@ -71,13 +133,7 @@ const MainLayout = () => {
       if (habit.type === 'weekly') { xp *= 2; gold *= 2; }
 
       const oldLevel = gameState.level;
-      
-      // GÜNCELLEME 2: Stat Artırma
-      // Eğer alışkanlığın bir stat türü varsa (örn: 'knowledge'), onu artırıyoruz.
-      if (habit.stat) {
-        increaseStat(habit.stat, 1);
-      }
-
+      if (habit.stat) increaseStat(habit.stat, 1);
       gainXp(xp);
       earnGold(gold);
 
@@ -96,20 +152,12 @@ const MainLayout = () => {
     setHabits(habits.filter(h => h.id !== id));
   };
 
-  // --- SHOP ACTIONS ---
   const handlePurchase = (item) => {
-    // GÜNCELLEME 3: Gerçek Satın Alma Mantığı
-    // Context'teki buyItem fonksiyonunu çağırıyoruz. O bize { success: true/false } döner.
     const result = buyItem(item);
-
     if (result.success) {
-      // Başarılıysa kullanıcıyı bilgilendir
-      Alert.alert("Awesome!", result.message);
-      
-      // İstersen burada bir ses efekti çalabilir veya konfetiler patlatabilirsin.
+      Alert.alert("Success!", result.message);
     } else {
-      // Başarısızsa (Yetersiz bakiye vb.)
-      Alert.alert("Transaction Failed", result.message);
+      Alert.alert("Failed", result.message);
     }
   };
 
@@ -126,7 +174,15 @@ const MainLayout = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-      {/* İÇERİK ALANI */}
+      {/* --- ENTEGRE EDİLMİŞ TOP BAR --- */}
+      <TopBar 
+        username={gameState.username} 
+        level={gameState.level} 
+        streak={3} // Şimdilik sabit, ileride dinamik olabilir
+        onProfilePress={() => setActiveTab('Profile')}
+      />
+
+      {/* --- ANA İÇERİK --- */}
       <View style={styles.content}>
         {activeTab === 'Dashboard' && <Dashboard habits={habits} />}
         
@@ -139,30 +195,29 @@ const MainLayout = () => {
           />
         )}
         
-        {activeTab === 'Profile' && <Profile />}
-        
         {activeTab === 'Boss' && <Boss />}
         
         {activeTab === 'Shop' && (
-          <Shop 
-            gold={gameState.gold} 
-            onPurchase={handlePurchase} 
-          />
+          <Shop gold={gameState.gold} onPurchase={handlePurchase} />
+        )}
+
+        {activeTab === 'Leaderboard' && <Leaderboard />}
+
+        {activeTab === 'Profile' && (
+          <Profile onLogout={handleLogout} />
         )}
       </View>
 
-      {/* ALT MENÜ (TAB BAR) */}
+      {/* --- ALT MENÜ (TAB BAR) --- */}
       <View style={styles.tabBar}>
         
-        {/* SOL: Profile */}
         <TabButton 
-          title="Profile" 
-          icon="account" 
-          isActive={activeTab === 'Profile'} 
-          onPress={() => setActiveTab('Profile')} 
+          title="Home" 
+          icon="view-dashboard" 
+          isActive={activeTab === 'Dashboard'} 
+          onPress={() => setActiveTab('Dashboard')} 
         />
 
-        {/* SOL-ORTA: Quests */}
         <TabButton 
           title="Quests" 
           icon="format-list-checks" 
@@ -170,7 +225,7 @@ const MainLayout = () => {
           onPress={() => setActiveTab('Quests')} 
         />
 
-        {/* ORTA: BOSS (Action) */}
+        {/* BOSS BUTONU */}
         <View style={{ top: -20 }}>
           <TouchableOpacity onPress={() => setActiveTab('Boss')} style={styles.centerButton}>
             <LinearGradient colors={['#FF3F3F', '#FF1744']} style={styles.centerGradient}>
@@ -179,7 +234,6 @@ const MainLayout = () => {
           </TouchableOpacity>
         </View>
 
-        {/* SAĞ-ORTA: SHOP */}
         <TabButton 
           title="Shop" 
           icon="store" 
@@ -187,12 +241,11 @@ const MainLayout = () => {
           onPress={() => setActiveTab('Shop')} 
         />
 
-        {/* SAĞ: Home */}
         <TabButton 
-          title="Home" 
-          icon="view-dashboard" 
-          isActive={activeTab === 'Dashboard'} 
-          onPress={() => setActiveTab('Dashboard')} 
+          title="Ranks" 
+          icon="podium-gold" 
+          isActive={activeTab === 'Leaderboard'} 
+          onPress={() => setActiveTab('Leaderboard')} 
         />
 
       </View>
@@ -230,12 +283,106 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+  container: { flex: 1, backgroundColor: '#121212', paddingTop: Platform.OS === 'android' ? 25 : 0 },
   loading: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
   content: { flex: 1 },
+
+  // --- YENİ TOP BAR STYLES ---
+  topBarContainer: {
+    zIndex: 100,
+  },
+  topBarGradient: {
+    paddingTop: 5,
+    paddingBottom: 5,
+  },
+  topBarContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatarBorder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    padding: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+    backgroundColor: '#333',
+  },
+  levelBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: COLORS.primary,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#121212',
+    paddingHorizontal: 2,
+  },
+  levelTextBadge: {
+    color: '#FFF',
+    fontSize: 9,
+    fontFamily: 'Orbitron_700Bold',
+  },
+  nameContainer: {
+    justifyContent: 'center',
+  },
+  usernameText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontFamily: 'Orbitron_700Bold',
+    maxWidth: 140,
+  },
+  subtitleText: {
+    color: COLORS.mutedForeground,
+    fontSize: 10,
+    fontFamily: 'Orbitron_400Regular',
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 63, 63, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 63, 63, 0.3)',
+  },
+  streakTextVal: {
+    color: '#FF3F3F',
+    fontSize: 14,
+    fontFamily: 'Orbitron_700Bold',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(138,43,226,0.2)',
+    marginTop: 5,
+  },
+
+  // --- TAB BAR STYLES ---
   tabBar: { flexDirection: 'row', height: 80, backgroundColor: '#1E1E1E', borderTopWidth: 1, borderTopColor: 'rgba(138,43,226,0.2)', alignItems: 'center', justifyContent: 'space-around', paddingBottom: 20 },
-  tabButton: { alignItems: 'center', padding: 5 },
+  tabButton: { alignItems: 'center', padding: 5, flex: 1 },
   tabText: { fontSize: 9, marginTop: 4, fontFamily: 'Orbitron_500Medium' },
-  centerButton: { width: 64, height: 64, borderRadius: 32, elevation: 10 },
+  centerButton: { width: 64, height: 64, borderRadius: 32, elevation: 10, shadowColor: COLORS.primary, shadowOpacity: 0.5, shadowRadius: 10 },
   centerGradient: { flex: 1, borderRadius: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#121212' }
 });
