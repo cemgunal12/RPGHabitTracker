@@ -7,7 +7,8 @@ import { FONTS } from '../../constants/theme';
 export default function BossWidget({ bossData, onAttack }) {
   if (!bossData) return null;
 
-  const healthPercent = (bossData.health / bossData.maxHealth) * 100;
+  // Can yüzdesi hesabı
+  const healthPercent = Math.max(0, (bossData.health / bossData.maxHealth) * 100);
 
   return (
     <View style={styles.wrapper}>
@@ -17,7 +18,12 @@ export default function BossWidget({ bossData, onAttack }) {
         
         {/* Boss Image */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: bossData.imageUrl }} style={styles.image} />
+          {/* GÜNCELLEME: resizeMode EKLENDİ */}
+          <Image 
+            source={{ uri: bossData.imageUrl }} 
+            style={styles.image} 
+            resizeMode="cover" 
+          />
           <View style={styles.bossLabel}>
              <MaterialCommunityIcons name="sword-cross" size={14} color="#FFF" />
              <Text style={styles.bossLabelText}>BOSS #{bossData.bossNumber}</Text>
@@ -26,12 +32,12 @@ export default function BossWidget({ bossData, onAttack }) {
 
         <View style={styles.info}>
           <View style={styles.row}>
-            <View>
-              <Text style={styles.name}>{bossData.name}</Text>
+            <View style={{flex: 1}}>
+              <Text style={styles.name} numberOfLines={1}>{bossData.name}</Text>
               <Text style={styles.sub}>World Boss</Text>
             </View>
             <View style={{alignItems:'flex-end'}}>
-              <Text style={styles.sub}>Boss</Text>
+              <Text style={styles.sub}>Progress</Text>
               <Text style={styles.number}>{bossData.bossNumber}/{bossData.totalBosses}</Text>
             </View>
           </View>
@@ -40,7 +46,7 @@ export default function BossWidget({ bossData, onAttack }) {
           <View style={{marginTop: 12}}>
             <View style={styles.hpRow}>
               <Text style={styles.hpLabel}>BOSS HEALTH</Text>
-              <Text style={styles.hpValue}>{bossData.health} / {bossData.maxHealth}</Text>
+              <Text style={styles.hpValue}>{Math.floor(bossData.health)} / {bossData.maxHealth}</Text>
             </View>
             <View style={styles.track}>
               <LinearGradient
@@ -50,7 +56,7 @@ export default function BossWidget({ bossData, onAttack }) {
             </View>
           </View>
 
-          {/* Button */}
+          {/* Attack Button */}
           <TouchableOpacity onPress={onAttack} activeOpacity={0.8} style={{marginTop: 16}}>
             <LinearGradient
               colors={['#FF3F3F', '#FF1744']}
@@ -69,12 +75,12 @@ export default function BossWidget({ bossData, onAttack }) {
 const styles = StyleSheet.create({
   wrapper: { paddingHorizontal: 20, marginBottom: 20 },
   container: { backgroundColor: '#1E1E1E', borderRadius: 20, borderWidth: 2, borderColor: 'rgba(255, 63, 63, 0.4)', overflow: 'hidden' },
-  imageContainer: { height: 140, position: 'relative' },
-  image: { width: '100%', height: '100%', opacity: 0.7, backgroundColor: '#000' },
+  imageContainer: { height: 160, width: '100%', position: 'relative', backgroundColor: '#000' },
+  image: { width: '100%', height: '100%' },
   bossLabel: { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255, 63, 63, 0.9)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#FF3F3F' },
   bossLabelText: { color: '#FFF', fontSize: 10, fontFamily: FONTS.bold },
   info: { padding: 16 },
-  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   name: { color: '#FFF', fontSize: 18, fontFamily: FONTS.bold },
   sub: { color: '#A0A0A0', fontSize: 12 },
   number: { color: '#FF3F3F', fontSize: 16, fontFamily: FONTS.bold },

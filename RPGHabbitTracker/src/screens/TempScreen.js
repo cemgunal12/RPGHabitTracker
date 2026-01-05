@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 
 // --- IMPORTLAR ---
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/GameContext'; // Context
 import { COLORS } from '../constants/theme';
 
 // Bileşenler
@@ -13,30 +13,19 @@ import BossWidget from '../components/rpg/BossWidget';
 import CalendarModal from '../components/rpg/CalendarModal'; 
 
 export default function DashboardScreen({ habits }) {
-  const { gameState } = useGame();
+  // 1. DÜZELTME: 'boss' verisini Context'ten çekiyoruz
+  const { gameState, boss } = useGame(); 
+
   const [isCalendarOpen, setCalendarOpen] = useState(false);
 
-  // --- GÜNCELLEME: Streak Hesaplama Mantığı ---
-  // Şimdilik habits array'indeki en yüksek streak'i alıyoruz.
+  // Streak Hesaplama
   const calculateMaxStreak = () => {
     if (!habits || habits.length === 0) return 0;
-    // En yüksek streak'e sahip alışkanlığı bul
     const max = Math.max(...habits.map(h => h.streak || 0));
     return max > 0 ? max : 0;
   };
 
   const currentStreak = calculateMaxStreak(); 
-  // NOT: Eğer sabit bir değer (5) görmek istiyorsanız üstteki satırı silip şunu yazın:
-  // const currentStreak = 5;
-
-  const bossData = {
-    name: "Dark Dragon",
-    health: 3500,
-    maxHealth: 5000,
-    imageUrl: "https://via.placeholder.com/400x200/000000/FFFFFF?text=Dark+Dragon",
-    bossNumber: 1,
-    totalBosses: 5
-  };
 
   const handleNavigateBoss = () => {
     alert("Boss fight loading...");
@@ -47,7 +36,6 @@ export default function DashboardScreen({ habits }) {
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
 
         {/* 1. Hero Section */}
-        {/* GÜNCELLEME: Hesaplanan streak'i buraya gönderiyoruz */}
         <HeroSection
           username={gameState.username}
           level={gameState.level}
@@ -68,15 +56,15 @@ export default function DashboardScreen({ habits }) {
         <StatsGrid stats={gameState.stats} />
 
         {/* 4. Boss Widget */}
+        {/* 2. DÜZELTME: 'bossData' yerine context'ten gelen 'boss' değişkenini verdik */}
         <BossWidget
-          bossData={bossData}
+          bossData={boss} 
           onAttack={handleNavigateBoss}
         />
 
       </ScrollView>
 
       {/* --- Takvim Modalı --- */}
-      {/* GÜNCELLEME: Hesaplanan streak'i buraya da gönderiyoruz */}
       <CalendarModal
         visible={isCalendarOpen}
         onClose={() => setCalendarOpen(false)}
