@@ -10,15 +10,25 @@ import HeroSection from '../components/rpg/HeroSection';
 import StatusBars from '../components/rpg/StatusBars';
 import StatsGrid from '../components/rpg/StatsGrid';
 import BossWidget from '../components/rpg/BossWidget';
-import CalendarModal from '../components/rpg/CalendarModal'; // YENİ EKLENDİ
+import CalendarModal from '../components/rpg/CalendarModal'; 
 
 export default function DashboardScreen({ habits }) {
   const { gameState } = useGame();
-
-  // --- YENİ: Takvim Modal State'i ---
   const [isCalendarOpen, setCalendarOpen] = useState(false);
 
-  // Örnek Boss Verisi
+  // --- GÜNCELLEME: Streak Hesaplama Mantığı ---
+  // Şimdilik habits array'indeki en yüksek streak'i alıyoruz.
+  const calculateMaxStreak = () => {
+    if (!habits || habits.length === 0) return 0;
+    // En yüksek streak'e sahip alışkanlığı bul
+    const max = Math.max(...habits.map(h => h.streak || 0));
+    return max > 0 ? max : 0;
+  };
+
+  const currentStreak = calculateMaxStreak(); 
+  // NOT: Eğer sabit bir değer (5) görmek istiyorsanız üstteki satırı silip şunu yazın:
+  // const currentStreak = 5;
+
   const bossData = {
     name: "Dark Dragon",
     health: 3500,
@@ -29,20 +39,20 @@ export default function DashboardScreen({ habits }) {
   };
 
   const handleNavigateBoss = () => {
-    alert("Boss sekmesine gidiliyor...");
+    alert("Boss fight loading...");
   };
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
 
-        {/* 1. Üst Kısım (Hero) */}
+        {/* 1. Hero Section */}
+        {/* GÜNCELLEME: Hesaplanan streak'i buraya gönderiyoruz */}
         <HeroSection
           username={gameState.username}
           level={gameState.level}
           badge={gameState.equippedBadge}
-          streak={3} // Şimdilik sabit 3, habits verisinden hesaplanabilir
-          // --- GÜNCELLEME: Butona basınca state'i true yapıyoruz ---
+          streak={currentStreak} 
           onStreakPress={() => setCalendarOpen(true)}
         />
 
@@ -65,11 +75,13 @@ export default function DashboardScreen({ habits }) {
 
       </ScrollView>
 
-      {/* --- YENİ: Takvim Modalı Buraya Eklendi --- */}
+      {/* --- Takvim Modalı --- */}
+      {/* GÜNCELLEME: Hesaplanan streak'i buraya da gönderiyoruz */}
       <CalendarModal
         visible={isCalendarOpen}
         onClose={() => setCalendarOpen(false)}
-        habits={habits} // App.js'den gelen habits verisini takvime gönderiyoruz
+        habits={habits} 
+        currentStreak={currentStreak}
       />
 
     </View>

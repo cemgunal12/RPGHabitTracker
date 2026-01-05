@@ -24,8 +24,7 @@ import Dashboard from './src/screens/TempScreen';
 import Habits from './src/screens/HabitsScreen';
 import Profile from './src/screens/ProfileScreen';
 import Boss from './src/screens/BossScreen';
-// import Leaderboard from './src/screens/LeaderboardScreen'; // Şimdilik kaldırdık veya Shop ile değiştirdik
-import Shop from './src/screens/ShopScreen'; // YENİ EKLENDİ
+import Shop from './src/screens/ShopScreen'; 
 import { QuestCompleteModal } from './src/components/rpg/QuestCompleteModal';
 
 const TabButton = ({ title, icon, isActive, onPress }) => (
@@ -42,9 +41,8 @@ const TabButton = ({ title, icon, isActive, onPress }) => (
 );
 
 const MainLayout = () => {
-  // Context'ten spendGold veya buyItem gibi bir fonksiyon gelmesi gerekir.
-  // Şimdilik sadece earnGold ve gameState var varsayıyoruz.
-  const { gameState, gainXp, earnGold, setUsername } = useGame();
+  // GÜNCELLEME 1: Context'ten increaseStat ve buyItem fonksiyonlarını çektik
+  const { gameState, gainXp, earnGold, increaseStat, buyItem, setUsername } = useGame();
 
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [authMode, setAuthMode] = useState('Login');
@@ -73,6 +71,13 @@ const MainLayout = () => {
       if (habit.type === 'weekly') { xp *= 2; gold *= 2; }
 
       const oldLevel = gameState.level;
+      
+      // GÜNCELLEME 2: Stat Artırma
+      // Eğer alışkanlığın bir stat türü varsa (örn: 'knowledge'), onu artırıyoruz.
+      if (habit.stat) {
+        increaseStat(habit.stat, 1);
+      }
+
       gainXp(xp);
       earnGold(gold);
 
@@ -93,14 +98,18 @@ const MainLayout = () => {
 
   // --- SHOP ACTIONS ---
   const handlePurchase = (item) => {
-    if (gameState.gold >= item.price) {
-      // NOT: Gerçek harcama için GameContext içinde 'spendGold' fonksiyonuna ihtiyacımız var.
-      // Şimdilik alert gösteriyoruz.
-      // spendGold(item.price); 
-      // addItemToInventory(item);
-      Alert.alert("Success!", `You bought ${item.name}. (Gold logic needs Context update)`);
+    // GÜNCELLEME 3: Gerçek Satın Alma Mantığı
+    // Context'teki buyItem fonksiyonunu çağırıyoruz. O bize { success: true/false } döner.
+    const result = buyItem(item);
+
+    if (result.success) {
+      // Başarılıysa kullanıcıyı bilgilendir
+      Alert.alert("Awesome!", result.message);
+      
+      // İstersen burada bir ses efekti çalabilir veya konfetiler patlatabilirsin.
     } else {
-      Alert.alert("Insufficient Gold", "You need more gold to buy this item.");
+      // Başarısızsa (Yetersiz bakiye vb.)
+      Alert.alert("Transaction Failed", result.message);
     }
   };
 
@@ -134,7 +143,6 @@ const MainLayout = () => {
         
         {activeTab === 'Boss' && <Boss />}
         
-        {/* Leaderboard yerine SHOP geldi */}
         {activeTab === 'Shop' && (
           <Shop 
             gold={gameState.gold} 
@@ -171,10 +179,10 @@ const MainLayout = () => {
           </TouchableOpacity>
         </View>
 
-        {/* SAĞ-ORTA: SHOP (Eski Ranking yeri) */}
+        {/* SAĞ-ORTA: SHOP */}
         <TabButton 
           title="Shop" 
-          icon="store" // İkon değişti
+          icon="store" 
           isActive={activeTab === 'Shop'} 
           onPress={() => setActiveTab('Shop')} 
         />

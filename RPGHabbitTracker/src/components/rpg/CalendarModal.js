@@ -7,13 +7,15 @@ import StreakCalendar from './StreakCalendar';
 
 const { height } = Dimensions.get('window');
 
-export default function CalendarModal({ visible, onClose, habits }) {
+// GÜNCELLEME: currentStreak prop'u eklendi
+export default function CalendarModal({ visible, onClose, habits, currentStreak }) {
   return (
     <Modal
       visible={visible}
       transparent
       animationType="slide"
       statusBarTranslucent
+      onRequestClose={onClose}
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
@@ -31,7 +33,8 @@ export default function CalendarModal({ visible, onClose, habits }) {
 
             {/* Calendar Content */}
             <View style={styles.calendarWrapper}>
-              <StreakCalendar habits={habits} />
+              {/* GÜNCELLEME: Streak değerini takvime gönderiyoruz */}
+              <StreakCalendar habits={habits} currentStreak={currentStreak} />
             </View>
 
           </LinearGradient>
@@ -48,7 +51,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    height: height * 0.85, // Ekranın %85'ini kaplasın
+    height: height * 0.85,
     width: '100%',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,

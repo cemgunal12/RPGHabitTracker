@@ -4,43 +4,46 @@ import Svg, { Polygon, Line, Circle, Text as SvgText } from 'react-native-svg';
 import { FONTS, COLORS } from '../../constants/theme';
 
 export default function StatsPentagon({ stats }) {
-  // Stat sıralaması ve etiketler
+  // 1. Safety Check: Default to 0 if stats are missing to prevent crash
+  const safeStats = stats || {
+    mind: 0,
+    vitality: 0,
+    knowledge: 0,
+    wealth: 0,
+    creativity: 0,
+  };
+
   const data = [
-    { label: 'Mind', value: stats.mind, color: '#8A2BE2' },       // Üst
-    { label: 'Vitality', value: stats.vitality, color: '#FF1744' }, // Sağ Üst
-    { label: 'Know.', value: stats.knowledge, color: '#00F0FF' },   // Sağ Alt
-    { label: 'Wealth', value: stats.wealth, color: '#FFD700' },     // Sol Alt
-    { label: 'Create', value: stats.creativity, color: '#FF69B4' }, // Sol Üst
+    { label: 'Mind', value: safeStats.mind, color: '#8A2BE2' },
+    { label: 'Vitality', value: safeStats.vitality, color: '#FF1744' },
+    { label: 'Know.', value: safeStats.knowledge, color: '#00F0FF' },
+    { label: 'Wealth', value: safeStats.wealth, color: '#FFD700' },
+    { label: 'Create', value: safeStats.creativity, color: '#FF69B4' },
   ];
 
-  const size = 260; // Grafik boyutu
+  const size = 260;
   const center = size / 2;
-  const radius = size / 2 - 40; // Yazılar için kenardan boşluk bırak
-  const maxStat = 100; // Statlar maksimum 100 üzerinden hesaplanır
+  const radius = size / 2 - 40; 
+  const maxStat = 100;
 
-  // Açıyı hesapla (5 köşe olduğu için 360/5 = 72 derece)
-  // -90 derece diyerek çizimi tepeden başlatıyoruz (Saat 12 yönü)
   const getPoint = (value, index) => {
     const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
-    const r = (value / maxStat) * radius;
+    // Ensure value doesn't exceed 100 visually
+    const clampedValue = Math.min(Math.max(value, 0), maxStat);
+    const r = (clampedValue / maxStat) * radius;
     const x = center + r * Math.cos(angle);
     const y = center + r * Math.sin(angle);
     return `${x},${y}`;
   };
 
-  // 1. Dış Çerçeve (Maksimum değerler)
   const bgPoints = data.map((_, i) => getPoint(100, i)).join(' ');
-  
-  // 2. İç Çerçeveler (Izgara görünümü için %50 ve %25 çizgileri)
   const grid50Points = data.map((_, i) => getPoint(50, i)).join(' ');
-
-  // 3. Oyuncu Statları (Dolu alan)
+  const grid25Points = data.map((_, i) => getPoint(25, i)).join(' '); // Added 25% grid
   const statPoints = data.map((d, i) => getPoint(d.value, i)).join(' ');
 
-  // Etiket Pozisyonları (Biraz daha dışarıda dursunlar diye radius + 25)
   const getLabelCoords = (index) => {
     const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
-    const r = radius + 25; 
+    const r = radius + 25;
     const x = center + r * Math.cos(angle);
     const y = center + r * Math.sin(angle);
     return { x, y };
@@ -50,35 +53,36 @@ export default function StatsPentagon({ stats }) {
     <View style={styles.container}>
       <Text style={styles.title}>Stats</Text>
       <Svg height={size} width={size}>
-        {/* Arka Plan Izgaraları */}
+        {/* Background Grids */}
         <Polygon points={bgPoints} stroke="rgba(255,255,255,0.2)" strokeWidth="1" fill="rgba(0,0,0,0.2)" />
         <Polygon points={grid50Points} stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none" />
+        <Polygon points={grid25Points} stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
         
-        {/* Merkezden Köşelere Giden Çizgiler */}
+        {/* Spokes (Center to Edge) */}
         {data.map((_, i) => {
-          const start = getPoint(0, i); // Merkez
-          const end = getPoint(100, i); // En uç
+          const start = getPoint(0, i);
+          const end = getPoint(100, i);
           const [x1, y1] = start.split(',');
           const [x2, y2] = end.split(',');
           return <Line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.1)" />;
         })}
 
-        {/* Oyuncunun Stat Alanı (Dolu Kısım) */}
+        {/* The Filled Stat Polygon */}
         <Polygon
           points={statPoints}
-          fill="rgba(138, 43, 226, 0.4)" // Mor şeffaf dolgu
-          stroke={COLORS.secondary}     // Neon mavi kenarlık
+          fill="rgba(138, 43, 226, 0.4)"
+          stroke={COLORS.secondary}
           strokeWidth="2"
         />
 
-        {/* Köşe Noktaları (Küçük Yuvarlaklar) */}
+        {/* Data Points (Dots) */}
         {data.map((d, i) => {
           const point = getPoint(d.value, i);
           const [cx, cy] = point.split(',');
           return <Circle key={i} cx={cx} cy={cy} r="4" fill={d.color} stroke="#FFF" strokeWidth="1" />;
         })}
 
-        {/* Etiketler (Mind, Vitality vb.) */}
+        {/* Labels */}
         {data.map((d, i) => {
           const { x, y } = getLabelCoords(i);
           return (
@@ -90,7 +94,7 @@ export default function StatsPentagon({ stats }) {
               fontSize="12"
               fontWeight="bold"
               fontFamily={FONTS.bold}
-              textAnchor="middle" // Metni ortala
+              textAnchor="middle"
               alignmentBaseline="middle"
             >
               {d.label}
