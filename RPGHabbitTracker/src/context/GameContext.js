@@ -12,7 +12,7 @@ const BOSSES = [
     id: 'boss-1',
     name: 'Shadow Dragon',
     maxHealth: 5000,
-    damage: 20, // Oyuncuya vurduğu hasar
+    damage: 20,
     imageUrl: 'https://images.unsplash.com/photo-1718202384239-8de0147482c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     badge: { name: 'Dragon Slayer', description: 'Defeated the Shadow Dragon', icon: '🐉' },
   },
@@ -37,7 +37,7 @@ const BOSSES = [
     name: 'Phoenix Overlord',
     maxHealth: 12500,
     damage: 75,
-    imageUrl: 'https://images.unsplash.com/photo-1508817172652-4be4be2795cb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    imageUrl: 'https://images.stockcake.com/public/b/1/2/b12f66ce-4c78-4b7b-9d98-5f6efadbb7c6_large/fiery-phoenix-emerge-stockcake.jpg',
     badge: { name: 'Flame Master', description: 'Defeated the Phoenix Overlord', icon: '🔥' },
   },
 ];
@@ -52,12 +52,12 @@ const INITIAL_STATE = {
     gold: 100,
     stats: { mind: 10, vitality: 10, knowledge: 10, wealth: 10, creativity: 10 },
     inventory: [],
-    badges: [], // Kazanılan rozetler buraya gelecek
+    badges: [],
+    weaponDamage: 10, // Başlangıç silah hasarı
 };
 
-// Boss'un dinamik durumu (Sadece canını ve kaçıncı boss olduğunu tutuyoruz)
 const INITIAL_BOSS_STATE = {
-    index: 0, // 0 = İlk boss
+    index: 0,
     currentHealth: BOSSES[0].maxHealth
 };
 
@@ -66,7 +66,6 @@ export const GameProvider = ({ children }) => {
     const [bossState, setBossState] = useState(INITIAL_BOSS_STATE);
     const [loading, setLoading] = useState(true);
 
-    // --- YÜKLEME & KAYDETME ---
     useEffect(() => { loadGame(); }, []);
     
     useEffect(() => { 
@@ -90,9 +89,7 @@ export const GameProvider = ({ children }) => {
         } catch (e) { console.error(e); }
     };
 
-    // --- AKTİF BOSS VERİSİNİ OLUŞTURMA ---
-    // Sabit verilerle değişken verileri (can) birleştiriyoruz
-    const currentBossData = BOSSES[bossState.index] || BOSSES[BOSSES.length - 1]; // Hata önlemek için
+    const currentBossData = BOSSES[bossState.index] || BOSSES[BOSSES.length - 1];
     
     const activeBoss = {
         ...currentBossData,
@@ -100,8 +97,6 @@ export const GameProvider = ({ children }) => {
         bossNumber: bossState.index + 1,
         totalBosses: BOSSES.length
     };
-
-    // --- OYUN FONKSİYONLARI ---
 
     const gainXp = (amount) => {
         setGameState((prev) => {
@@ -129,29 +124,37 @@ export const GameProvider = ({ children }) => {
         
         setGameState(prev => {
             const statsToUpdate = { ...prev.stats };
+            let newWeaponDamage = prev.weaponDamage || 10;
+            
             if (item.description.includes("Mind")) statsToUpdate.mind += 5;
             else if (item.description.includes("Vitality")) statsToUpdate.vitality += 5;
             else if (item.description.includes("Knowledge")) statsToUpdate.knowledge += 5;
             else if (item.description.includes("Wealth")) statsToUpdate.wealth += 5;
             else if (item.description.includes("Creativity")) statsToUpdate.creativity += 5;
+            
+            // Silah alındıysa hasar arttır
+            if (item.category === 'weapon') {
+                newWeaponDamage += 15;
+            }
 
-            return { ...prev, gold: prev.gold - item.price, inventory: [...prev.inventory, item], stats: statsToUpdate };
+            return { 
+                ...prev, 
+                gold: prev.gold - item.price, 
+                inventory: [...prev.inventory, item], 
+                stats: statsToUpdate,
+                weaponDamage: newWeaponDamage
+            };
         });
         return { success: true, message: `Purchased ${item.name}!` };
     };
 
-    // --- BOSS MANTIĞI ---
-
-    // 1. Boss'a Hasar Verme
     const damageBoss = (amount) => {
         setBossState(prev => {
             let newHealth = prev.currentHealth - amount;
 
-            // BOSS ÖLDÜ MÜ?
             if (newHealth <= 0) {
                 const defeatedBoss = BOSSES[prev.index];
                 
-                // Ödül: Badge Ekle
                 setGameState(gs => ({
                     ...gs,
                     badges: [...gs.badges, defeatedBoss.badge]
@@ -159,18 +162,13 @@ export const GameProvider = ({ children }) => {
 
                 Alert.alert("VICTORY! 🏆", `You defeated ${defeatedBoss.name} and earned the ${defeatedBoss.badge.name} badge!`);
 
-                // Sonraki Boss'a Geç
                 const nextIndex = prev.index + 1;
                 
-                // Eğer oyun bittiyse (tüm bosslar öldü)
                 if (nextIndex >= BOSSES.length) {
                     Alert.alert("GAME CLEARED", "You are the ultimate legend! All bosses defeated.");
-                    // İstersen burada oyunu sıfırlayabilir veya sonsuz moda alabilirsin.
-                    // Şimdilik son boss'ta kalsın ama canı fullensin:
                     return { index: prev.index, currentHealth: defeatedBoss.maxHealth };
                 }
 
-                // Yeni Boss Yükle
                 return {
                     index: nextIndex,
                     currentHealth: BOSSES[nextIndex].maxHealth
@@ -181,22 +179,19 @@ export const GameProvider = ({ children }) => {
         });
     };
 
-    // 2. Gün Sonu (Boss Saldırısı)
     const triggerDayEnd = () => {
         setGameState(prev => {
             let newHealth = prev.health - activeBoss.damage;
             let playerDied = false;
 
-            // Karakter Öldü mü?
             if (newHealth <= 0) {
                 playerDied = true;
-                newHealth = prev.maxHealth; // Karakter canlanır
+                newHealth = prev.maxHealth;
                 Alert.alert("YOU DIED ☠️", `${activeBoss.name} defeated you! Boss health has been reset.`);
             } else {
                 Alert.alert("Day Ended", `${activeBoss.name} attacked! You took ${activeBoss.damage} damage.`);
             }
 
-            // Eğer karakter öldüyse, AKTİF BOSS'un canını fulle
             if (playerDied) {
                 setBossState(bs => ({
                     ...bs,
@@ -211,7 +206,7 @@ export const GameProvider = ({ children }) => {
     return (
         <GameContext.Provider value={{
             gameState,
-            boss: activeBoss, // Birleştirilmiş boss verisi
+            boss: activeBoss,
             loading,
             gainXp,
             earnGold,

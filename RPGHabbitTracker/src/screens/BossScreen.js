@@ -1,40 +1,34 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Text, Vibration } from 'react-native';
+import { StyleSheet, View, ScrollView, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from '../context/GameContext'; 
 
-// Components
 import BossHeader from '../components/rpg/BossHeader';
 import BossCardDetailed from '../components/rpg/BossCardDetailed';
 import BossRewards from '../components/rpg/BossRewards';
-import { COLORS } from '../constants/theme';
+import { FONTS } from '../constants/theme';
 
 export default function BossScreen() {
-  // 1. Context'ten güncel boss verisini ve saldırı fonksiyonunu çekiyoruz
-  const { gameState, boss, damageBoss } = useGame();
+  const { gameState, boss } = useGame();
   
   const isDefeated = boss.health <= 0;
 
-  // Saldırı Mantığı
-  const handleAttack = () => {
-    // Hasar hesaplama: Sabit 50 + (Karakterin Gücü * 5)
-    // "stats.mind" veya senin belirlediğin bir stat'ı kullanabilirsin.
-    // Şimdilik örnek olarak Vitality ve Mind toplamını hasar olarak alalım.
-    const playerDamage = 50 + ((gameState.stats.vitality || 0) + (gameState.stats.mind || 0)) * 2;
+  // Toplam hasar hesaplama (bilgilendirme için)
+  const calculateDamage = (difficulty = 'medium') => {
+    let habitDamage = 100; // medium default
+    if (difficulty === 'easy') habitDamage = 50;
+    if (difficulty === 'hard') habitDamage = 200;
     
-    // Titreşim efekti (Opsiyonel, telefonda güzel hissettirir)
-    Vibration.vibrate(50);
-    
-    // Context'teki fonksiyonu çağır
-    damageBoss(playerDamage);
+    const characterBonus = gameState.level * 10;
+    const weaponBonus = gameState.weaponDamage || 10;
+    return habitDamage + characterBonus + weaponBonus;
   };
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100, paddingTop: 20 }}>
         
-        {/* Header: Kaçıncı Boss olduğunu gösterir */}
         <BossHeader 
           bossNumber={boss.bossNumber} 
           totalBosses={boss.totalBosses} 
@@ -42,40 +36,75 @@ export default function BossScreen() {
 
         <View style={{ height: 20 }} />
 
-        {/* Boss Kartı: Resim, Can Barı, İsim */}
-        {/* Artık veriler tamamen Context'ten geliyor */}
         <BossCardDetailed 
           boss={boss} 
           isDefeated={isDefeated} 
           userLevel={gameState.level} 
         />
 
-        {/* --- SALDIRI BUTONU --- */}
+        {/* BİLGİLENDİRME KUTUSU */}
         {!isDefeated ? (
-          <TouchableOpacity 
-            onPress={handleAttack} 
-            activeOpacity={0.7}
-            style={styles.attackButtonContainer}
-          >
+          <View style={styles.infoContainer}>
             <LinearGradient
-              colors={['#FF3F3F', '#8B0000']}
-              style={styles.attackButton}
+              colors={['rgba(138, 43, 226, 0.1)', 'rgba(0, 240, 255, 0.1)']}
+              style={styles.infoBox}
             >
-              <MaterialCommunityIcons name="sword-cross" size={32} color="#FFF" />
-              <Text style={styles.attackText}>ATTACK</Text>
-              <Text style={styles.damageText}>
-                DMG: {50 + ((gameState.stats.vitality || 0) + (gameState.stats.mind || 0)) * 2}
+              <View style={styles.infoHeader}>
+                <MaterialCommunityIcons name="information" size={24} color="#00F0FF" />
+                <Text style={styles.infoTitle}>How to Deal Damage</Text>
+              </View>
+              
+              <Text style={styles.infoText}>
+                Complete quests to automatically damage the boss!
               </Text>
+              
+              <View style={styles.damageInfo}>
+                <View style={styles.damageRow}>
+                  <View style={styles.damageLabel}>
+                    <View style={[styles.dot, { backgroundColor: '#00FF88' }]} />
+                    <Text style={styles.damageText}>Easy Quest</Text>
+                  </View>
+                  <Text style={styles.damageValue}>{calculateDamage('easy')} DMG</Text>
+                </View>
+                
+                <View style={styles.damageRow}>
+                  <View style={styles.damageLabel}>
+                    <View style={[styles.dot, { backgroundColor: '#FFD700' }]} />
+                    <Text style={styles.damageText}>Medium Quest</Text>
+                  </View>
+                  <Text style={styles.damageValue}>{calculateDamage('medium')} DMG</Text>
+                </View>
+                
+                <View style={styles.damageRow}>
+                  <View style={styles.damageLabel}>
+                    <View style={[styles.dot, { backgroundColor: '#FF1744' }]} />
+                    <Text style={styles.damageText}>Hard Quest</Text>
+                  </View>
+                  <Text style={styles.damageValue}>{calculateDamage('hard')} DMG</Text>
+                </View>
+              </View>
+
+              <View style={styles.bonusInfo}>
+                <MaterialCommunityIcons name="sword" size={16} color="#8A2BE2" />
+                <Text style={styles.bonusText}>
+                  Bonus: Level x10 ({gameState.level * 10}) + Weapon ({gameState.weaponDamage || 10})
+                </Text>
+              </View>
             </LinearGradient>
-          </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.defeatedContainer}>
-            <Text style={styles.defeatedText}>BOSS DEFEATED</Text>
-            <Text style={styles.waitingText}>Searching for next opponent...</Text>
+            <LinearGradient
+              colors={['rgba(0, 255, 136, 0.2)', 'rgba(0, 255, 136, 0.05)']}
+              style={styles.defeatedBox}
+            >
+              <MaterialCommunityIcons name="trophy" size={48} color="#00FF88" />
+              <Text style={styles.defeatedTitle}>BOSS DEFEATED!</Text>
+              <Text style={styles.defeatedText}>The next challenge awaits...</Text>
+            </LinearGradient>
           </View>
         )}
 
-        {/* Ödüller: Boss sırasına göre artan ödüller */}
         <BossRewards 
           xp={100 * boss.bossNumber} 
           gold={200 * boss.bossNumber} 
@@ -87,60 +116,109 @@ export default function BossScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#121212' 
+  },
   
-  attackButtonContainer: {
+  // Bilgilendirme Kutusu
+  infoContainer: {
     marginHorizontal: 20,
     marginVertical: 20,
-    shadowColor: "#FF0000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 8,
   },
-  attackButton: {
+  infoBox: {
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(138, 43, 226, 0.3)',
+  },
+  infoHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#FF6666',
+    gap: 10,
+    marginBottom: 12,
   },
-  attackText: {
+  infoTitle: {
     color: '#FFF',
-    fontSize: 20,
-    fontFamily: 'Orbitron_700Bold',
-    marginLeft: 10,
-    letterSpacing: 2,
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+  },
+  infoText: {
+    color: '#A0A0A0',
+    fontSize: 14,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  damageInfo: {
+    gap: 10,
+    marginBottom: 16,
+  },
+  damageRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(30, 30, 30, 0.5)',
+    padding: 10,
+    borderRadius: 10,
+  },
+  damageLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   damageText: {
-    position: 'absolute',
-    right: 15,
-    color: 'rgba(255,255,255,0.6)',
-    fontFamily: 'Orbitron_400Regular',
-    fontSize: 10,
+    color: '#FFF',
+    fontSize: 13,
+    fontFamily: FONTS.medium,
+  },
+  damageValue: {
+    color: '#00F0FF',
+    fontSize: 14,
+    fontFamily: FONTS.bold,
+  },
+  bonusInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    backgroundColor: 'rgba(138, 43, 226, 0.1)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(138, 43, 226, 0.2)',
+  },
+  bonusText: {
+    color: '#8A2BE2',
+    fontSize: 12,
+    flex: 1,
   },
   
+  // Defeated Container
   defeatedContainer: {
-    alignItems: 'center',
+    marginHorizontal: 20,
     marginVertical: 20,
-    padding: 20,
-    backgroundColor: 'rgba(0, 255, 128, 0.1)',
+  },
+  defeatedBox: {
+    alignItems: 'center',
+    padding: 30,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 128, 0.3)',
-    marginHorizontal: 20,
+    borderColor: 'rgba(0, 255, 136, 0.3)',
+  },
+  defeatedTitle: {
+    color: '#00FF88',
+    fontSize: 24,
+    fontFamily: FONTS.bold,
+    letterSpacing: 2,
+    marginTop: 12,
   },
   defeatedText: {
-    color: '#00FF80',
-    fontSize: 20,
-    fontFamily: 'Orbitron_700Bold',
-    letterSpacing: 2,
-  },
-  waitingText: {
-    color: '#888',
-    marginTop: 5,
-    fontFamily: 'Orbitron_400Regular',
+    color: '#A0A0A0',
+    marginTop: 8,
+    fontFamily: FONTS.regular,
   }
 });

@@ -15,62 +15,95 @@ import { useFonts, Orbitron_400Regular, Orbitron_500Medium, Orbitron_700Bold } f
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// --- CONTEXT ---
 import { GameProvider, useGame } from './src/context/GameContext';
 import { COLORS } from './src/constants/theme';
 
-// --- EKRANLAR ---
 import Login from './src/screens/auth/LoginScreen';
 import SignUp from './src/screens/auth/SignUpScreen';
-import Dashboard from './src/screens/TempScreen'; // Home
-import Habits from './src/screens/HabitsScreen'; // Quests
+import Dashboard from './src/screens/TempScreen';
+import Habits from './src/screens/HabitsScreen';
 import Profile from './src/screens/ProfileScreen';
 import Boss from './src/screens/BossScreen';
 import Shop from './src/screens/ShopScreen'; 
-import Leaderboard from './src/screens/LeaderboardScreen'; // <--- YENİ EKLENDİ (Gerçek dosya yolu)
+import Leaderboard from './src/screens/LeaderboardScreen';
 
 import { QuestCompleteModal } from './src/components/rpg/QuestCompleteModal';
+import CalendarModal from './src/components/rpg/CalendarModal';
 
 // =====================================================================
-// --- ENTEGRE TOP BAR COMPONENT ---
+// --- YENIDEN TASARLANAN TOP BAR ---
 // =====================================================================
-const TopBar = ({ username, level, streak, onProfilePress }) => (
-  <View style={styles.topBarContainer}>
+const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
+  <View style={styles.topBarWrapper}>
     <LinearGradient
-      colors={['#1E1E1E', '#121212']}
-      style={styles.topBarGradient}
+      colors={['#1A1A1A', '#121212']}
+      style={styles.topBarContainer}
     >
-      <View style={styles.topBarContent}>
-        
-        {/* SOL: Profil */}
-        <TouchableOpacity onPress={onProfilePress} style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-             <LinearGradient colors={[COLORS.primary, COLORS.secondary]} style={styles.avatarBorder}>
-                <Image 
-                  source={{ uri: `https://api.dicebear.com/7.x/adventurer/png?seed=${username}` }} 
-                  style={styles.avatarImage} 
-                />
-             </LinearGradient>
-             <View style={styles.levelBadge}>
-                <Text style={styles.levelTextBadge}>{level}</Text>
-             </View>
-          </View>
+      {/* Sol Taraf - Profil */}
+      <TouchableOpacity 
+        onPress={onProfilePress} 
+        style={styles.profileButton}
+        activeOpacity={0.7}
+      >
+        <View style={styles.avatarWrapper}>
+          <LinearGradient 
+            colors={[COLORS.primary, COLORS.secondary]} 
+            style={styles.avatarGradient}
+          >
+            <Image 
+              source={{ uri: `https://api.dicebear.com/7.x/adventurer/png?seed=${username}` }} 
+              style={styles.avatar} 
+            />
+          </LinearGradient>
           
-          <View style={styles.nameContainer}>
-            <Text style={styles.usernameText} numberOfLines={1}>{username}</Text>
-            <Text style={styles.subtitleText}>Adventurer</Text>
+          {/* Level Badge */}
+          <View style={styles.levelBadge}>
+            <LinearGradient
+              colors={['#FFD700', '#FFA500']}
+              style={styles.levelGradientBg}
+            >
+              <Text style={styles.levelBadgeText}>{level}</Text>
+            </LinearGradient>
           </View>
-        </TouchableOpacity>
-
-        {/* SAĞ: Streak */}
-        <View style={styles.streakBadge}>
-            <MaterialCommunityIcons name="fire" size={20} color="#FF3F3F" />
-            <Text style={styles.streakTextVal}>{streak}</Text>
         </View>
 
-      </View>
-      <View style={styles.divider} />
+        <View style={styles.userInfo}>
+          <Text style={styles.username} numberOfLines={1}>{username}</Text>
+          <View style={styles.titleBadge}>
+            <MaterialCommunityIcons name="crown" size={10} color="#FFD700" />
+            <Text style={styles.titleText}>Adventurer</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {/* Sağ Taraf - Streak */}
+      <TouchableOpacity 
+        onPress={onStreakPress}
+        style={styles.streakButton}
+        activeOpacity={0.7}
+      >
+        <LinearGradient
+          colors={['rgba(255, 23, 68, 0.2)', 'rgba(255, 23, 68, 0.05)']}
+          style={styles.streakGradient}
+        >
+          <View style={styles.streakIconBox}>
+            <MaterialCommunityIcons name="fire" size={20} color="#FF1744" />
+          </View>
+          <View style={styles.streakInfo}>
+            <Text style={styles.streakValue}>{streak}</Text>
+            <Text style={styles.streakLabel}>DAY STREAK</Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
     </LinearGradient>
+
+    {/* Bottom Border */}
+    <LinearGradient
+      colors={[COLORS.primary, COLORS.secondary]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.bottomBorder}
+    />
   </View>
 );
 
@@ -89,24 +122,33 @@ const TabButton = ({ title, icon, isActive, onPress }) => (
 );
 
 const MainLayout = () => {
-  const { gameState, gainXp, earnGold, increaseStat, buyItem, setUsername } = useGame();
+  const { gameState, gainXp, earnGold, increaseStat, buyItem, setUsername, damageBoss } = useGame();
 
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [authMode, setAuthMode] = useState('Login');
   
-  // Modal State
+  // Modal States
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ questName: '', xp: 0, gold: 0, stat: null });
   const [levelUpData, setLevelUpData] = useState({ isLevelUp: false, newLevel: 1 });
+  const [showCalendar, setShowCalendar] = useState(false);
 
-  // Dummy Habits
+  // Habits
   const [habits, setHabits] = useState([
     { id: '1', name: 'Read Book (30m)', stat: 'knowledge', difficulty: 'easy', completed: false, streak: 3, type: 'daily' },
     { id: '2', name: 'Workout', stat: 'vitality', difficulty: 'hard', completed: false, streak: 5, type: 'daily' },
     { id: '3', name: 'Weekly Review', stat: 'wealth', difficulty: 'medium', completed: false, streak: 0, type: 'weekly' },
   ]);
 
-  // --- ACTIONS ---
+  // Streak Hesaplama
+  const calculateMaxStreak = () => {
+    if (!habits || habits.length === 0) return 0;
+    const max = Math.max(...habits.map(h => h.streak || 0));
+    return max > 0 ? max : 0;
+  };
+
+  const currentStreak = calculateMaxStreak();
+
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure?", [
       { text: "Cancel", style: "cancel" },
@@ -128,6 +170,18 @@ const MainLayout = () => {
       if (habit.stat) increaseStat(habit.stat, 1);
       gainXp(xp);
       earnGold(gold);
+
+      // BOSS'A HASAR VER
+      // Hasar = Habit Zorluğu + Karakter Leveli * 10 + Silah Hasarı
+      let habitDamage = 50;
+      if (habit.difficulty === 'medium') habitDamage = 100;
+      if (habit.difficulty === 'hard') habitDamage = 200;
+      
+      const characterBonus = gameState.level * 10;
+      const weaponBonus = gameState.weaponDamage || 10;
+      const totalDamage = habitDamage + characterBonus + weaponBonus;
+      
+      damageBoss(totalDamage);
 
       setModalData({ questName: habit.name, xp, gold, stat: { name: habit.stat, amount: 1 } });
       const predictedLevel = (gameState.currentXP + xp) >= gameState.maxXP ? gameState.level + 1 : gameState.level;
@@ -153,7 +207,6 @@ const MainLayout = () => {
     }
   };
 
-  // --- AUTH CHECK ---
   if (!gameState.username || gameState.username === 'Adventurer') {
     return authMode === 'Login' ? (
       <Login onLogin={(u) => setUsername(u)} onNavigateToSignUp={() => setAuthMode('SignUp')} />
@@ -166,15 +219,16 @@ const MainLayout = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-      {/* --- TOP BAR --- */}
+      {/* TOP BAR */}
       <TopBar 
         username={gameState.username} 
         level={gameState.level} 
-        streak={3} 
+        streak={currentStreak}
         onProfilePress={() => setActiveTab('Profile')}
+        onStreakPress={() => setShowCalendar(true)}
       />
 
-      {/* --- ANA İÇERİK --- */}
+      {/* ANA İÇERİK */}
       <View style={styles.content}>
         {activeTab === 'Dashboard' && <Dashboard habits={habits} />}
         
@@ -193,7 +247,6 @@ const MainLayout = () => {
           <Shop gold={gameState.gold} onPurchase={handlePurchase} />
         )}
 
-        {/* ARTIK GERÇEK LEADERBOARD EKRANI ÇALIŞACAK */}
         {activeTab === 'Leaderboard' && <Leaderboard />}
 
         {activeTab === 'Profile' && (
@@ -201,7 +254,7 @@ const MainLayout = () => {
         )}
       </View>
 
-      {/* --- ALT MENÜ --- */}
+      {/* ALT MENÜ */}
       <View style={styles.tabBar}>
         <TabButton title="Home" icon="view-dashboard" isActive={activeTab === 'Dashboard'} onPress={() => setActiveTab('Dashboard')} />
         <TabButton title="Quests" icon="format-list-checks" isActive={activeTab === 'Quests'} onPress={() => setActiveTab('Quests')} />
@@ -218,6 +271,7 @@ const MainLayout = () => {
         <TabButton title="Ranks" icon="podium-gold" isActive={activeTab === 'Leaderboard'} onPress={() => setActiveTab('Leaderboard')} />
       </View>
 
+      {/* MODALS */}
       <QuestCompleteModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -227,6 +281,13 @@ const MainLayout = () => {
         statGained={modalData.stat}
         isLevelUp={levelUpData.isLevelUp}
         newLevel={levelUpData.newLevel}
+      />
+
+      <CalendarModal
+        visible={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        habits={habits}
+        currentStreak={currentStreak}
       />
     </SafeAreaView>
   );
@@ -251,31 +312,184 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212', paddingTop: Platform.OS === 'android' ? 25 : 0 },
-  loading: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#121212', 
+    paddingTop: Platform.OS === 'android' ? 25 : 0 
+  },
+  loading: { 
+    flex: 1, 
+    backgroundColor: '#121212', 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
   content: { flex: 1 },
   
-  // TOP BAR STYLES
-  topBarContainer: { zIndex: 100 },
-  topBarGradient: { paddingTop: 5, paddingBottom: 5 },
-  topBarContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10 },
-  profileSection: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatarContainer: { position: 'relative' },
-  avatarBorder: { width: 48, height: 48, borderRadius: 24, padding: 2, justifyContent: 'center', alignItems: 'center' },
-  avatarImage: { width: '100%', height: '100%', borderRadius: 24, backgroundColor: '#333' },
-  levelBadge: { position: 'absolute', bottom: -2, right: -2, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#121212', paddingHorizontal: 2 },
-  levelTextBadge: { color: '#FFF', fontSize: 9, fontFamily: 'Orbitron_700Bold' },
-  nameContainer: { justifyContent: 'center' },
-  usernameText: { color: '#FFF', fontSize: 16, fontFamily: 'Orbitron_700Bold', maxWidth: 140 },
-  subtitleText: { color: COLORS.mutedForeground, fontSize: 10, fontFamily: 'Orbitron_400Regular' },
-  streakBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: 'rgba(255, 63, 63, 0.1)', borderWidth: 1, borderColor: 'rgba(255, 63, 63, 0.3)' },
-  streakTextVal: { color: '#FF3F3F', fontSize: 14, fontFamily: 'Orbitron_700Bold' },
-  divider: { height: 1, backgroundColor: 'rgba(138,43,226,0.2)', marginTop: 5 },
+  // =====================================================================
+  // YENI TOPBAR STYLES
+  // =====================================================================
+  topBarWrapper: {
+    backgroundColor: '#1A1A1A',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  topBarContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: 20,
+  },
+  bottomBorder: {
+    height: 2,
+    width: '100%',
+  },
 
+  // Profil Butonu
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  avatarWrapper: {
+    position: 'relative',
+  },
+  avatarGradient: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    padding: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 26,
+    backgroundColor: '#2A2A2A',
+  },
+  levelBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#121212',
+    overflow: 'hidden',
+  },
+  levelGradientBg: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  levelBadgeText: {
+    color: '#121212',
+    fontSize: 10,
+    fontFamily: 'Orbitron_700Bold',
+  },
+  userInfo: {
+    flex: 1,
+  },
+  username: {
+    color: '#FFF',
+    fontSize: 16,
+    fontFamily: 'Orbitron_700Bold',
+    marginBottom: 2,
+  },
+  titleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  titleText: {
+    color: '#A0A0A0',
+    fontSize: 10,
+    fontFamily: 'Orbitron_400Regular',
+  },
+
+  // Streak Butonu
+  streakButton: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 23, 68, 0.4)',
+  },
+  streakGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  streakIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 23, 68, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  streakInfo: {
+    alignItems: 'flex-start',
+  },
+  streakValue: {
+    color: '#FF1744',
+    fontSize: 16,
+    fontFamily: 'Orbitron_700Bold',
+    lineHeight: 18,
+  },
+  streakLabel: {
+    color: '#FF6B6B',
+    fontSize: 8,
+    fontFamily: 'Orbitron_400Regular',
+    letterSpacing: 0.5,
+  },
+
+  // =====================================================================
   // TAB BAR STYLES
-  tabBar: { flexDirection: 'row', height: 80, backgroundColor: '#1E1E1E', borderTopWidth: 1, borderTopColor: 'rgba(138,43,226,0.2)', alignItems: 'center', justifyContent: 'space-around', paddingBottom: 20 },
-  tabButton: { alignItems: 'center', padding: 5, flex: 1 },
-  tabText: { fontSize: 9, marginTop: 4, fontFamily: 'Orbitron_500Medium' },
-  centerButton: { width: 64, height: 64, borderRadius: 32, elevation: 10, shadowColor: COLORS.primary, shadowOpacity: 0.5, shadowRadius: 10 },
-  centerGradient: { flex: 1, borderRadius: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#121212' }
+  // =====================================================================
+  tabBar: { 
+    flexDirection: 'row', 
+    height: 80, 
+    backgroundColor: '#1E1E1E', 
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(138,43,226,0.2)', 
+    alignItems: 'center', 
+    justifyContent: 'space-around', 
+    paddingBottom: 20 
+  },
+  tabButton: { 
+    alignItems: 'center', 
+    padding: 5, 
+    flex: 1 
+  },
+  tabText: { 
+    fontSize: 9, 
+    marginTop: 4, 
+    fontFamily: 'Orbitron_500Medium' 
+  },
+  centerButton: { 
+    width: 64, 
+    height: 64, 
+    borderRadius: 32, 
+    elevation: 10, 
+    shadowColor: COLORS.primary, 
+    shadowOpacity: 0.5, 
+    shadowRadius: 10 
+  },
+  centerGradient: { 
+    flex: 1, 
+    borderRadius: 32, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 2, 
+    borderColor: '#121212' 
+  }
 });
