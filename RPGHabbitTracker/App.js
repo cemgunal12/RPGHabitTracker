@@ -15,23 +15,27 @@ import { useFonts, Orbitron_400Regular, Orbitron_500Medium, Orbitron_700Bold } f
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
+// --- CONTEXT ---
 import { GameProvider, useGame } from './src/context/GameContext';
 import { COLORS } from './src/constants/theme';
 
+// --- EKRANLAR ---
 import Login from './src/screens/auth/LoginScreen';
 import SignUp from './src/screens/auth/SignUpScreen';
-import Dashboard from './src/screens/TempScreen';
-import Habits from './src/screens/HabitsScreen';
-import Profile from './src/screens/ProfileScreen';
+// Dashboard kaldırıldı, özellikleri Profile'a taşındı.
+import Habits from './src/screens/HabitsScreen'; // QUESTS
+import Profile from './src/screens/ProfileScreen'; // PROFILE (Dashboard birleşik)
 import Boss from './src/screens/BossScreen';
 import Shop from './src/screens/ShopScreen'; 
-import Leaderboard from './src/screens/LeaderboardScreen';
+import Inventory from './src/screens/InventoryScreen'; // INVENTORY
+import Leaderboard from './src/screens/LeaderboardScreen'; // RANKS
 
+// --- MODALS ---
 import { QuestCompleteModal } from './src/components/rpg/QuestCompleteModal';
 import CalendarModal from './src/components/rpg/CalendarModal';
 
 // =====================================================================
-// --- YENIDEN TASARLANAN TOP BAR ---
+// --- TOP BAR COMPONENT ---
 // =====================================================================
 const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
   <View style={styles.topBarWrapper}>
@@ -56,7 +60,6 @@ const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
             />
           </LinearGradient>
           
-          {/* Level Badge */}
           <View style={styles.levelBadge}>
             <LinearGradient
               colors={['#FFD700', '#FFA500']}
@@ -97,7 +100,6 @@ const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
       </TouchableOpacity>
     </LinearGradient>
 
-    {/* Bottom Border */}
     <LinearGradient
       colors={[COLORS.primary, COLORS.secondary]}
       start={{ x: 0, y: 0 }}
@@ -124,7 +126,8 @@ const TabButton = ({ title, icon, isActive, onPress }) => (
 const MainLayout = () => {
   const { gameState, gainXp, earnGold, increaseStat, buyItem, setUsername, damageBoss } = useGame();
 
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  // Varsayılan ekran artık 'Quests'
+  const [activeTab, setActiveTab] = useState('Quests');
   const [authMode, setAuthMode] = useState('Login');
   
   // Modal States
@@ -140,15 +143,14 @@ const MainLayout = () => {
     { id: '3', name: 'Weekly Review', stat: 'wealth', difficulty: 'medium', completed: false, streak: 0, type: 'weekly' },
   ]);
 
-  // Streak Hesaplama
   const calculateMaxStreak = () => {
     if (!habits || habits.length === 0) return 0;
     const max = Math.max(...habits.map(h => h.streak || 0));
     return max > 0 ? max : 0;
   };
-
   const currentStreak = calculateMaxStreak();
 
+  // --- ACTIONS ---
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure?", [
       { text: "Cancel", style: "cancel" },
@@ -171,17 +173,13 @@ const MainLayout = () => {
       gainXp(xp);
       earnGold(gold);
 
-      // BOSS'A HASAR VER
-      // Hasar = Habit Zorluğu + Karakter Leveli * 10 + Silah Hasarı
+      // BOSS DAMAGE LOGIC
       let habitDamage = 50;
       if (habit.difficulty === 'medium') habitDamage = 100;
       if (habit.difficulty === 'hard') habitDamage = 200;
-      
       const characterBonus = gameState.level * 10;
-      const weaponBonus = gameState.weaponDamage || 10;
-      const totalDamage = habitDamage + characterBonus + weaponBonus;
-      
-      damageBoss(totalDamage);
+      const weaponBonus = 10;
+      damageBoss(habitDamage + characterBonus + weaponBonus);
 
       setModalData({ questName: habit.name, xp, gold, stat: { name: habit.stat, amount: 1 } });
       const predictedLevel = (gameState.currentXP + xp) >= gameState.maxXP ? gameState.level + 1 : gameState.level;
@@ -207,6 +205,7 @@ const MainLayout = () => {
     }
   };
 
+  // --- AUTH CHECK ---
   if (!gameState.username || gameState.username === 'Adventurer') {
     return authMode === 'Login' ? (
       <Login onLogin={(u) => setUsername(u)} onNavigateToSignUp={() => setAuthMode('SignUp')} />
@@ -224,13 +223,12 @@ const MainLayout = () => {
         username={gameState.username} 
         level={gameState.level} 
         streak={currentStreak}
-        onProfilePress={() => setActiveTab('Profile')}
+        onProfilePress={() => setActiveTab('Profile')} // TopBar'a basınca Profile'a git
         onStreakPress={() => setShowCalendar(true)}
       />
 
-      {/* ANA İÇERİK */}
+      {/* ANA İÇERİK ALANI */}
       <View style={styles.content}>
-        {activeTab === 'Dashboard' && <Dashboard habits={habits} />}
         
         {activeTab === 'Quests' && (
           <Habits
@@ -240,6 +238,8 @@ const MainLayout = () => {
             onDeleteHabit={handleDeleteHabit}
           />
         )}
+
+        {activeTab === 'Inventory' && <Inventory />}
         
         {activeTab === 'Boss' && <Boss />}
         
@@ -250,25 +250,58 @@ const MainLayout = () => {
         {activeTab === 'Leaderboard' && <Leaderboard />}
 
         {activeTab === 'Profile' && (
-          <Profile onLogout={handleLogout} />
+          <Profile 
+            onLogout={handleLogout} 
+            onNavigateBoss={() => setActiveTab('Boss')} // Profile'dan Boss'a gitmek isterse
+          />
         )}
+
       </View>
 
-      {/* ALT MENÜ */}
+      {/* YENİ ALT MENÜ (NAVBAR) */}
       <View style={styles.tabBar}>
-        <TabButton title="Home" icon="view-dashboard" isActive={activeTab === 'Dashboard'} onPress={() => setActiveTab('Dashboard')} />
-        <TabButton title="Quests" icon="format-list-checks" isActive={activeTab === 'Quests'} onPress={() => setActiveTab('Quests')} />
         
+        {/* 1. QUEST (Görevler) */}
+        <TabButton 
+            title="Quest" 
+            icon="scroll" // veya format-list-checks
+            isActive={activeTab === 'Quests'} 
+            onPress={() => setActiveTab('Quests')} 
+        />
+        
+        {/* 2. INVENTORY (Envanter) */}
+        <TabButton 
+            title="Inventory" 
+            icon="bag-personal" 
+            isActive={activeTab === 'Inventory'} 
+            onPress={() => setActiveTab('Inventory')} 
+        />
+
+        {/* 3. BOSS BATTLE (ORTA - KILIÇ) */}
         <View style={{ top: -20 }}>
           <TouchableOpacity onPress={() => setActiveTab('Boss')} style={styles.centerButton}>
             <LinearGradient colors={['#FF3F3F', '#FF1744']} style={styles.centerGradient}>
-              <MaterialCommunityIcons name="sword" size={32} color="#FFF" />
+              <MaterialCommunityIcons name="sword-cross" size={32} color="#FFF" />
             </LinearGradient>
           </TouchableOpacity>
         </View>
 
-        <TabButton title="Shop" icon="store" isActive={activeTab === 'Shop'} onPress={() => setActiveTab('Shop')} />
-        <TabButton title="Ranks" icon="podium-gold" isActive={activeTab === 'Leaderboard'} onPress={() => setActiveTab('Leaderboard')} />
+        {/* 4. SHOP (Mağaza) */}
+        <TabButton 
+            title="Shop" 
+            icon="store" 
+            isActive={activeTab === 'Shop'} 
+            onPress={() => setActiveTab('Shop')} 
+        />
+
+        {/* 5. RANKS (Sıralama) */}
+        <TabButton 
+            title="Ranks" 
+            icon="podium-gold" 
+            isActive={activeTab === 'Leaderboard'} 
+            onPress={() => setActiveTab('Leaderboard')} 
+        />
+
       </View>
 
       {/* MODALS */}
@@ -286,7 +319,6 @@ const MainLayout = () => {
       <CalendarModal
         visible={showCalendar}
         onClose={() => setShowCalendar(false)}
-        habits={habits}
         currentStreak={currentStreak}
       />
     </SafeAreaView>
@@ -312,184 +344,36 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#121212', 
-    paddingTop: Platform.OS === 'android' ? 25 : 0 
-  },
-  loading: { 
-    flex: 1, 
-    backgroundColor: '#121212', 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
+  container: { flex: 1, backgroundColor: '#121212', paddingTop: Platform.OS === 'android' ? 25 : 0 },
+  loading: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
   content: { flex: 1 },
   
-  // =====================================================================
-  // YENI TOPBAR STYLES
-  // =====================================================================
-  topBarWrapper: {
-    backgroundColor: '#1A1A1A',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: 'hidden',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  topBarContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: 20,
-  },
-  bottomBorder: {
-    height: 2,
-    width: '100%',
-  },
+  // TOP BAR STYLES
+  topBarWrapper: { backgroundColor: '#1A1A1A', borderBottomLeftRadius: 20, borderBottomRightRadius: 20, overflow: 'hidden', shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8 },
+  topBarContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, paddingTop: 20 },
+  bottomBorder: { height: 2, width: '100%' },
+  profileButton: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  avatarWrapper: { position: 'relative' },
+  avatarGradient: { width: 52, height: 52, borderRadius: 26, padding: 2, justifyContent: 'center', alignItems: 'center' },
+  avatar: { width: '100%', height: '100%', borderRadius: 26, backgroundColor: '#2A2A2A' },
+  levelBadge: { position: 'absolute', bottom: -4, right: -4, borderRadius: 10, borderWidth: 2, borderColor: '#121212', overflow: 'hidden' },
+  levelGradientBg: { paddingHorizontal: 6, paddingVertical: 2 },
+  levelBadgeText: { color: '#121212', fontSize: 10, fontFamily: 'Orbitron_700Bold' },
+  userInfo: { flex: 1 },
+  username: { color: '#FFF', fontSize: 16, fontFamily: 'Orbitron_700Bold', marginBottom: 2 },
+  titleBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  titleText: { color: '#A0A0A0', fontSize: 10, fontFamily: 'Orbitron_400Regular' },
+  streakButton: { borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255, 23, 68, 0.4)' },
+  streakGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, gap: 8 },
+  streakIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(255, 23, 68, 0.2)', alignItems: 'center', justifyContent: 'center' },
+  streakInfo: { alignItems: 'flex-start' },
+  streakValue: { color: '#FF1744', fontSize: 16, fontFamily: 'Orbitron_700Bold', lineHeight: 18 },
+  streakLabel: { color: '#FF6B6B', fontSize: 8, fontFamily: 'Orbitron_400Regular', letterSpacing: 0.5 },
 
-  // Profil Butonu
-  profileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  avatarWrapper: {
-    position: 'relative',
-  },
-  avatarGradient: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    padding: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 26,
-    backgroundColor: '#2A2A2A',
-  },
-  levelBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#121212',
-    overflow: 'hidden',
-  },
-  levelGradientBg: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  levelBadgeText: {
-    color: '#121212',
-    fontSize: 10,
-    fontFamily: 'Orbitron_700Bold',
-  },
-  userInfo: {
-    flex: 1,
-  },
-  username: {
-    color: '#FFF',
-    fontSize: 16,
-    fontFamily: 'Orbitron_700Bold',
-    marginBottom: 2,
-  },
-  titleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  titleText: {
-    color: '#A0A0A0',
-    fontSize: 10,
-    fontFamily: 'Orbitron_400Regular',
-  },
-
-  // Streak Butonu
-  streakButton: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 23, 68, 0.4)',
-  },
-  streakGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  streakIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 23, 68, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  streakInfo: {
-    alignItems: 'flex-start',
-  },
-  streakValue: {
-    color: '#FF1744',
-    fontSize: 16,
-    fontFamily: 'Orbitron_700Bold',
-    lineHeight: 18,
-  },
-  streakLabel: {
-    color: '#FF6B6B',
-    fontSize: 8,
-    fontFamily: 'Orbitron_400Regular',
-    letterSpacing: 0.5,
-  },
-
-  // =====================================================================
   // TAB BAR STYLES
-  // =====================================================================
-  tabBar: { 
-    flexDirection: 'row', 
-    height: 80, 
-    backgroundColor: '#1E1E1E', 
-    borderTopWidth: 1, 
-    borderTopColor: 'rgba(138,43,226,0.2)', 
-    alignItems: 'center', 
-    justifyContent: 'space-around', 
-    paddingBottom: 20 
-  },
-  tabButton: { 
-    alignItems: 'center', 
-    padding: 5, 
-    flex: 1 
-  },
-  tabText: { 
-    fontSize: 9, 
-    marginTop: 4, 
-    fontFamily: 'Orbitron_500Medium' 
-  },
-  centerButton: { 
-    width: 64, 
-    height: 64, 
-    borderRadius: 32, 
-    elevation: 10, 
-    shadowColor: COLORS.primary, 
-    shadowOpacity: 0.5, 
-    shadowRadius: 10 
-  },
-  centerGradient: { 
-    flex: 1, 
-    borderRadius: 32, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    borderWidth: 2, 
-    borderColor: '#121212' 
-  }
+  tabBar: { flexDirection: 'row', height: 80, backgroundColor: '#1E1E1E', borderTopWidth: 1, borderTopColor: 'rgba(138,43,226,0.2)', alignItems: 'center', justifyContent: 'space-around', paddingBottom: 20 },
+  tabButton: { alignItems: 'center', padding: 5, flex: 1 },
+  tabText: { fontSize: 9, marginTop: 4, fontFamily: 'Orbitron_500Medium' },
+  centerButton: { width: 64, height: 64, borderRadius: 32, elevation: 10, shadowColor: COLORS.primary, shadowOpacity: 0.5, shadowRadius: 10 },
+  centerGradient: { flex: 1, borderRadius: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#121212' }
 });

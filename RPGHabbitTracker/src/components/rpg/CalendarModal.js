@@ -7,7 +7,6 @@ import StreakCalendar from './StreakCalendar';
 
 const { height } = Dimensions.get('window');
 
-// GÜNCELLEME: currentStreak prop'u eklendi
 export default function CalendarModal({ visible, onClose, habits, currentStreak }) {
   return (
     <Modal
@@ -18,6 +17,9 @@ export default function CalendarModal({ visible, onClose, habits, currentStreak 
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
+        {/* Arkaya basınca kapanması için */}
+        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        
         <View style={styles.container}>
           <LinearGradient
             colors={['#1E1E1E', '#121212']}
@@ -27,14 +29,14 @@ export default function CalendarModal({ visible, onClose, habits, currentStreak 
             <View style={styles.header}>
               <Text style={styles.title}>Streak Calendar</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color={COLORS.mutedForeground} />
+                <X size={24} color={COLORS.mutedForeground || '#888'} />
               </TouchableOpacity>
             </View>
 
             {/* Calendar Content */}
             <View style={styles.calendarWrapper}>
-              {/* GÜNCELLEME: Streak değerini takvime gönderiyoruz */}
-              <StreakCalendar habits={habits} currentStreak={currentStreak} />
+              {/* Habits undefined ise boş array gönderiyoruz */}
+              <StreakCalendar habits={habits || []} currentStreak={currentStreak || 0} />
             </View>
 
           </LinearGradient>
@@ -56,6 +58,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     overflow: 'hidden',
+    backgroundColor: '#1E1E1E', // Fallback renk
   },
   content: {
     flex: 1,
@@ -70,7 +73,7 @@ const styles = StyleSheet.create({
   title: {
     color: '#FFF',
     fontSize: 20,
-    fontFamily: FONTS.bold,
+    fontFamily: FONTS.bold || 'System',
   },
   closeButton: {
     padding: 4,

@@ -1,19 +1,18 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Text, Alert } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-// Components
-import ProfileHeader from '../components/rpg/ProfileHeader';
+// Bileşenler
+import HeroSection from '../components/rpg/HeroSection';
+import StatusBars from '../components/rpg/StatusBars';
 import StatsPentagon from '../components/rpg/StatsPentagon';
-import InventoryGrid from '../components/rpg/InventoryGrid';
+// InventoryGrid importu kaldırıldı
 import BadgesSection from '../components/rpg/BadgesSection';
+import BossWidget from '../components/rpg/BossWidget';
 
-// App.js'den gelen onLogout fonksiyonunu prop olarak alıyoruz
-export default function ProfileScreen({ onLogout }) {
-  const { gameState } = useGame();
-
-  const totalStats = Object.values(gameState.stats).reduce((a, b) => a + b, 0);
+export default function ProfileScreen({ onLogout, onNavigateBoss }) {
+  const { gameState, boss } = useGame();
 
   const handleEquipBadge = (badgeId) => {
     console.log("Equipping badge:", badgeId);
@@ -21,30 +20,48 @@ export default function ProfileScreen({ onLogout }) {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         
-        {/* Header */}
-        <ProfileHeader 
+        {/* 1. Hero Section (Karakter Özeti) */}
+        <HeroSection
           username={gameState.username}
           level={gameState.level}
-          gold={gameState.gold}
-          totalStats={totalStats}
+          badge={gameState.equippedBadge}
+          streak={3}
+          onStreakPress={() => Alert.alert("Streak", "Keep the flame alive!")} 
         />
 
-        {/* Beşgen Stat Grafiği */}
-        <StatsPentagon stats={gameState.stats} />
+        {/* 2. Status Bars (Can ve XP) */}
+        <StatusBars
+          health={gameState.health}
+          maxHealth={gameState.maxHealth}
+          xp={gameState.currentXP}
+          maxXP={gameState.maxXP}
+        />
 
-        {/* Inventory */}
-        <InventoryGrid />
+        {/* 3. Stats Pentagon (Yetenek Grafiği) */}
+        <View style={styles.sectionSpacing}>
+            <StatsPentagon stats={gameState.stats} />
+        </View>
 
-        {/* Badges */}
+        {/* 4. Boss Widget (Aktif Boss Kartı) */}
+        <View style={styles.sectionSpacing}>
+            <BossWidget
+                bossData={boss} 
+                onAttack={onNavigateBoss}
+            />
+        </View>
+
+        {/* Inventory Bölümü Kaldırıldı */}
+
+        {/* 5. Badges (Rozetler) */}
         <BadgesSection 
           badges={gameState.badges} 
           equippedId={gameState.equippedBadge}
           onEquip={handleEquipBadge}
         />
 
-        {/* --- LOG OUT BUTTON --- */}
+        {/* 6. Logout Button */}
         <View style={styles.logoutContainer}>
             <TouchableOpacity 
                 style={styles.logoutButton} 
@@ -54,7 +71,7 @@ export default function ProfileScreen({ onLogout }) {
                 <Text style={styles.logoutText}>SYSTEM DISCONNECT</Text>
                 <MaterialCommunityIcons name="logout-variant" size={20} color="#FF4444" />
             </TouchableOpacity>
-            <Text style={styles.versionText}>v1.0.0 Alpha Build</Text>
+            <Text style={styles.versionText}>v1.0.0 Beta</Text>
         </View>
 
       </ScrollView>
@@ -65,9 +82,15 @@ export default function ProfileScreen({ onLogout }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212' },
   
-  // Logout Styles
+  // Bileşenler arası boşluk
+  sectionSpacing: { 
+    marginTop: 24 
+  },
+  
+  // Logout Alanı Stilleri
   logoutContainer: {
-    marginTop: 30,
+    marginTop: 40,
+    marginBottom: 20,
     alignItems: 'center',
     paddingHorizontal: 20,
   },
@@ -81,7 +104,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 68, 68, 0.3)',
     backgroundColor: 'rgba(255, 68, 68, 0.05)',
     borderRadius: 12,
-    gap: 10, // İkon ve yazı arası boşluk
+    gap: 10,
   },
   logoutText: {
     color: '#FF4444',
