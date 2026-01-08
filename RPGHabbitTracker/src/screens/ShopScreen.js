@@ -25,7 +25,7 @@ export default function ShopScreen({ onPurchase }) {
   const getIconName = (icon) => {
     const map = {
       sword: 'sword', shield: 'shield', crown: 'crown', shirt: 'tshirt-crew',
-      footprints: 'shoe-print', sparkles: 'sparkles', circle: 'ring',
+      footprints: 'shoe-print', sparkles: 'star-four-points', circle: 'ring',
       cat: 'cat', 
       
       // DÜZELTME BURADA: 'wolf' verisi için 'dog-side' ikonunu kullanıyoruz
