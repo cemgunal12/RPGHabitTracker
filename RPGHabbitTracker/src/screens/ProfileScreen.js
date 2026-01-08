@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Text, Alert } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Text } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -7,11 +7,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import HeroSection from '../components/rpg/HeroSection';
 import StatusBars from '../components/rpg/StatusBars';
 import StatsPentagon from '../components/rpg/StatsPentagon';
-// InventoryGrid importu kaldırıldı
 import BadgesSection from '../components/rpg/BadgesSection';
 import BossWidget from '../components/rpg/BossWidget';
 
-export default function ProfileScreen({ onLogout, onNavigateBoss }) {
+// GÜNCELLEME: onOpenCalendar ve streak prop'larını ekledik
+export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar, streak }) {
   const { gameState, boss } = useGame();
 
   const handleEquipBadge = (badgeId) => {
@@ -22,16 +22,17 @@ export default function ProfileScreen({ onLogout, onNavigateBoss }) {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         
-        {/* 1. Hero Section (Karakter Özeti) */}
+        {/* 1. Hero Section */}
         <HeroSection
           username={gameState.username}
           level={gameState.level}
           badge={gameState.equippedBadge}
-          streak={3}
-          onStreakPress={() => Alert.alert("Streak", "Keep the flame alive!")} 
+          // GÜNCELLEME: Gerçek streak verisi ve tıklama fonksiyonu
+          streak={streak} 
+          onStreakPress={onOpenCalendar} 
         />
 
-        {/* 2. Status Bars (Can ve XP) */}
+        {/* 2. Status Bars */}
         <StatusBars
           health={gameState.health}
           maxHealth={gameState.maxHealth}
@@ -39,12 +40,12 @@ export default function ProfileScreen({ onLogout, onNavigateBoss }) {
           maxXP={gameState.maxXP}
         />
 
-        {/* 3. Stats Pentagon (Yetenek Grafiği) */}
+        {/* 3. Stats Pentagon */}
         <View style={styles.sectionSpacing}>
             <StatsPentagon stats={gameState.stats} />
         </View>
 
-        {/* 4. Boss Widget (Aktif Boss Kartı) */}
+        {/* 4. Boss Widget */}
         <View style={styles.sectionSpacing}>
             <BossWidget
                 bossData={boss} 
@@ -52,9 +53,7 @@ export default function ProfileScreen({ onLogout, onNavigateBoss }) {
             />
         </View>
 
-        {/* Inventory Bölümü Kaldırıldı */}
-
-        {/* 5. Badges (Rozetler) */}
+        {/* 5. Badges */}
         <BadgesSection 
           badges={gameState.badges} 
           equippedId={gameState.equippedBadge}
@@ -82,12 +81,10 @@ export default function ProfileScreen({ onLogout, onNavigateBoss }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212' },
   
-  // Bileşenler arası boşluk
   sectionSpacing: { 
     marginTop: 24 
   },
   
-  // Logout Alanı Stilleri
   logoutContainer: {
     marginTop: 40,
     marginBottom: 20,

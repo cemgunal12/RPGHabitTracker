@@ -264,7 +264,7 @@ const MainLayout = () => {
         {/* 1. QUEST (Görevler) */}
         <TabButton 
             title="Quest" 
-            icon="scroll" // veya format-list-checks
+            icon="script-text" // veya format-list-checks
             isActive={activeTab === 'Quests'} 
             onPress={() => setActiveTab('Quests')} 
         />
