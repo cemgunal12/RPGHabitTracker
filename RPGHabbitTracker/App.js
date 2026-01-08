@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  SafeAreaView,
   StatusBar,
   Alert,
   Image,
@@ -15,6 +14,9 @@ import { useFonts, Orbitron_400Regular, Orbitron_500Medium, Orbitron_700Bold } f
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
+// --- GÜNCELLEME 1: Yeni Safe Area Kütüphanesi ---
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+
 // --- CONTEXT ---
 import { GameProvider, useGame } from './src/context/GameContext';
 import { COLORS } from './src/constants/theme';
@@ -22,11 +24,10 @@ import { COLORS } from './src/constants/theme';
 // --- EKRANLAR ---
 import Login from './src/screens/auth/LoginScreen';
 import SignUp from './src/screens/auth/SignUpScreen';
-// Dashboard kaldırıldı, özellikleri Profile'a taşındı.
-import Habits from './src/screens/HabitsScreen'; // QUESTS
-import Profile from './src/screens/ProfileScreen'; // PROFILE (Dashboard birleşik)
+import Habits from './src/screens/HabitsScreen'; // Quests
+import Profile from './src/screens/ProfileScreen';
 import Boss from './src/screens/BossScreen';
-import Shop from './src/screens/ShopScreen'; 
+import Shop from './src/screens/ShopScreen';
 import Inventory from './src/screens/InventoryScreen'; // INVENTORY
 import Leaderboard from './src/screens/LeaderboardScreen'; // RANKS
 
@@ -44,22 +45,22 @@ const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
       style={styles.topBarContainer}
     >
       {/* Sol Taraf - Profil */}
-      <TouchableOpacity 
-        onPress={onProfilePress} 
+      <TouchableOpacity
+        onPress={onProfilePress}
         style={styles.profileButton}
         activeOpacity={0.7}
       >
         <View style={styles.avatarWrapper}>
-          <LinearGradient 
-            colors={[COLORS.primary, COLORS.secondary]} 
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.secondary]}
             style={styles.avatarGradient}
           >
-            <Image 
-              source={{ uri: `https://api.dicebear.com/7.x/adventurer/png?seed=${username}` }} 
-              style={styles.avatar} 
+            <Image
+              source={{ uri: `https://api.dicebear.com/7.x/adventurer/png?seed=${username}` }}
+              style={styles.avatar}
             />
           </LinearGradient>
-          
+
           <View style={styles.levelBadge}>
             <LinearGradient
               colors={['#FFD700', '#FFA500']}
@@ -80,7 +81,7 @@ const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
       </TouchableOpacity>
 
       {/* Sağ Taraf - Streak */}
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={onStreakPress}
         style={styles.streakButton}
         activeOpacity={0.7}
@@ -126,10 +127,9 @@ const TabButton = ({ title, icon, isActive, onPress }) => (
 const MainLayout = () => {
   const { gameState, gainXp, earnGold, increaseStat, buyItem, setUsername, damageBoss } = useGame();
 
-  // Varsayılan ekran artık 'Quests'
   const [activeTab, setActiveTab] = useState('Quests');
   const [authMode, setAuthMode] = useState('Login');
-  
+
   // Modal States
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ questName: '', xp: 0, gold: 0, stat: null });
@@ -162,7 +162,7 @@ const MainLayout = () => {
     const habit = habits.find(h => h.id === id);
     if (habit && !habit.completed) {
       setHabits(habits.map(h => h.id === id ? { ...h, completed: true, streak: h.streak + 1 } : h));
-      
+
       let xp = 10, gold = 5;
       if (habit.difficulty === 'medium') { xp = 25; gold = 15; }
       if (habit.difficulty === 'hard') { xp = 50; gold = 30; }
@@ -214,22 +214,23 @@ const MainLayout = () => {
     );
   }
 
+  // --- GÜNCELLEME 2: SafeAreaView yeni kütüphaneden ve edges eklendi ---
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
       {/* TOP BAR */}
-      <TopBar 
-        username={gameState.username} 
-        level={gameState.level} 
+      <TopBar
+        username={gameState.username}
+        level={gameState.level}
         streak={currentStreak}
-        onProfilePress={() => setActiveTab('Profile')} // TopBar'a basınca Profile'a git
+        onProfilePress={() => setActiveTab('Profile')}
         onStreakPress={() => setShowCalendar(true)}
       />
 
       {/* ANA İÇERİK ALANI */}
       <View style={styles.content}>
-        
+
         {activeTab === 'Quests' && (
           <Habits
             habits={habits}
@@ -240,9 +241,9 @@ const MainLayout = () => {
         )}
 
         {activeTab === 'Inventory' && <Inventory />}
-        
+
         {activeTab === 'Boss' && <Boss />}
-        
+
         {activeTab === 'Shop' && (
           <Shop gold={gameState.gold} onPurchase={handlePurchase} />
         )}
@@ -250,35 +251,38 @@ const MainLayout = () => {
         {activeTab === 'Leaderboard' && <Leaderboard />}
 
         {activeTab === 'Profile' && (
-          <Profile 
-            onLogout={handleLogout} 
-            onNavigateBoss={() => setActiveTab('Boss')} // Profile'dan Boss'a gitmek isterse
+          <Profile
+            onLogout={handleLogout}
+            onNavigateBoss={() => setActiveTab('Boss')}
+            onOpenCalendar={() => setShowCalendar(true)}
+            streak={currentStreak}
           />
         )}
 
       </View>
 
-      {/* YENİ ALT MENÜ (NAVBAR) */}
+      {/* ALT MENÜ (NAVBAR) */}
       <View style={styles.tabBar}>
-        
-        {/* 1. QUEST (Görevler) */}
-        <TabButton 
-            title="Quest" 
-            icon="script-text" // veya format-list-checks
-            isActive={activeTab === 'Quests'} 
-            onPress={() => setActiveTab('Quests')} 
+
+        {/* 1. QUEST */}
+        <TabButton
+          title="Quest"
+          icon="script-text"
+          isActive={activeTab === 'Quests'}
+          onPress={() => setActiveTab('Quests')}
         />
-        
-        {/* 2. INVENTORY (Envanter) */}
-        <TabButton 
-            title="Inventory" 
-            icon="bag-personal" 
-            isActive={activeTab === 'Inventory'} 
-            onPress={() => setActiveTab('Inventory')} 
+
+        {/* 2. INVENTORY */}
+        <TabButton
+          title="Inventory"
+          icon="bag-personal"
+          isActive={activeTab === 'Inventory'}
+          onPress={() => setActiveTab('Inventory')}
         />
 
         {/* 3. BOSS BATTLE (ORTA - KILIÇ) */}
-        <View style={{ top: -20 }}>
+        {/* GÜNCELLEME 3: 'top' yerine 'transform' kullanıldı */}
+        <View style={styles.bossButtonWrapper}>
           <TouchableOpacity onPress={() => setActiveTab('Boss')} style={styles.centerButton}>
             <LinearGradient colors={['#FF3F3F', '#FF1744']} style={styles.centerGradient}>
               <MaterialCommunityIcons name="sword-cross" size={32} color="#FFF" />
@@ -286,20 +290,20 @@ const MainLayout = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 4. SHOP (Mağaza) */}
-        <TabButton 
-            title="Shop" 
-            icon="store" 
-            isActive={activeTab === 'Shop'} 
-            onPress={() => setActiveTab('Shop')} 
+        {/* 4. SHOP */}
+        <TabButton
+          title="Shop"
+          icon="store"
+          isActive={activeTab === 'Shop'}
+          onPress={() => setActiveTab('Shop')}
         />
 
-        {/* 5. RANKS (Sıralama) */}
-        <TabButton 
-            title="Ranks" 
-            icon="podium-gold" 
-            isActive={activeTab === 'Leaderboard'} 
-            onPress={() => setActiveTab('Leaderboard')} 
+        {/* 5. RANKS */}
+        <TabButton
+          title="Ranks"
+          icon="podium-gold"
+          isActive={activeTab === 'Leaderboard'}
+          onPress={() => setActiveTab('Leaderboard')}
         />
 
       </View>
@@ -325,6 +329,7 @@ const MainLayout = () => {
   );
 };
 
+// --- GÜNCELLEME 4: En dışı SafeAreaProvider ile sarma ---
 export default function App() {
   let [fontsLoaded] = useFonts({ Orbitron_400Regular, Orbitron_500Medium, Orbitron_700Bold });
 
@@ -337,17 +342,19 @@ export default function App() {
   }
 
   return (
-    <GameProvider>
-      <MainLayout />
-    </GameProvider>
+    <SafeAreaProvider>
+      <GameProvider>
+        <MainLayout />
+      </GameProvider>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212', paddingTop: Platform.OS === 'android' ? 25 : 0 },
+  container: { flex: 1, backgroundColor: '#121212' },
   loading: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
   content: { flex: 1 },
-  
+
   // TOP BAR STYLES
   topBarWrapper: { backgroundColor: '#1A1A1A', borderBottomLeftRadius: 20, borderBottomRightRadius: 20, overflow: 'hidden', shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8 },
   topBarContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, paddingTop: 20 },
@@ -374,6 +381,12 @@ const styles = StyleSheet.create({
   tabBar: { flexDirection: 'row', height: 80, backgroundColor: '#1E1E1E', borderTopWidth: 1, borderTopColor: 'rgba(138,43,226,0.2)', alignItems: 'center', justifyContent: 'space-around', paddingBottom: 20 },
   tabButton: { alignItems: 'center', padding: 5, flex: 1 },
   tabText: { fontSize: 9, marginTop: 4, fontFamily: 'Orbitron_500Medium' },
+
+  // GÜNCELLEME 5: Boss Butonu için Wrapper stili (Transform kullanıldı)
+  bossButtonWrapper: {
+    transform: [{ translateY: -20 }], // 'top: -20' yerine bu satır eklendi
+    zIndex: 10
+  },
   centerButton: { width: 64, height: 64, borderRadius: 32, elevation: 10, shadowColor: COLORS.primary, shadowOpacity: 0.5, shadowRadius: 10 },
   centerGradient: { flex: 1, borderRadius: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#121212' }
 });
