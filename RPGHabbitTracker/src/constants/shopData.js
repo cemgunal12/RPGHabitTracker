@@ -137,7 +137,7 @@ export const SHOP_ITEMS = [
     description: 'A strong wolf companion',
     price: 400,
     category: 'companion',
-    icon: 'wolf',
+    icon: 'dog-side',
     rarity: 'epic',
     statBonus: { stat: 'damage', amount: 3 },
     slotType: 'companion',

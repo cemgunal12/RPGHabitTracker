@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'rea
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from '../context/GameContext';
-import { SHOP_ITEMS } from '../constants/shopData';
+import { SHOP_ITEMS } from '../constants/shopData'; // Dosya yolunun doğruluğundan emin ol
 import { COLORS } from '../constants/theme';
 
 export default function ShopScreen({ onPurchase }) {
@@ -14,7 +14,7 @@ export default function ShopScreen({ onPurchase }) {
     { id: 'all', label: 'All' },
     { id: 'weapon', label: 'Weapons' },
     { id: 'armor', label: 'Armor' },
-    { id: 'accessory', label: 'Acc.' }, // Kısaltıldı
+    { id: 'accessory', label: 'Acc.' },
     { id: 'companion', label: 'Pets' },
   ];
 
@@ -26,7 +26,12 @@ export default function ShopScreen({ onPurchase }) {
     const map = {
       sword: 'sword', shield: 'shield', crown: 'crown', shirt: 'tshirt-crew',
       footprints: 'shoe-print', sparkles: 'sparkles', circle: 'ring',
-      cat: 'cat', dog: 'dog', dragon: 'fire', zap: 'flash'
+      cat: 'cat', 
+      
+      // DÜZELTME BURADA: 'wolf' verisi için 'dog-side' ikonunu kullanıyoruz
+      wolf: 'dog-side', 
+      
+      dragon: 'fire', zap: 'flash'
     };
     return map[icon] || 'package-variant';
   };

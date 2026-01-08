@@ -5,13 +5,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from '../context/GameContext';
 
 export default function InventoryScreen() {
-  const { gameState, equipItem, unequipItem } = useGame();
+  // GÜNCELLEME: sellItem fonksiyonunu çektik
+  const { gameState, equipItem, unequipItem, sellItem } = useGame();
 
   if (!gameState || !gameState.inventory) {
      return <View style={styles.container}><Text style={{color:'white', marginTop:50, textAlign:'center'}}>Loading...</Text></View>;
   }
 
-  // --- GÜNCELLEME: Companion slotu eklendi ---
   const slots = [
     { type: 'weapon', icon: 'sword', label: 'Weapon' },
     { type: 'shield', icon: 'shield', label: 'Shield' },
@@ -19,14 +19,14 @@ export default function InventoryScreen() {
     { type: 'chest', icon: 'tshirt-crew', label: 'Armor' },
     { type: 'legs', icon: 'shoe-print', label: 'Legs' },
     { type: 'ring', icon: 'ring', label: 'Ring' },
-    { type: 'companion', icon: 'paw', label: 'Pet' }, // <--- BURASI
+    { type: 'companion', icon: 'paw', label: 'Pet' },
   ];
 
   const getIconName = (icon) => {
     const map = {
       sword: 'sword', shield: 'shield', crown: 'crown', shirt: 'tshirt-crew',
       footprints: 'shoe-print', sparkles: 'sparkles', circle: 'ring',
-      cat: 'cat', dog: 'dog', dragon: 'fire', paw: 'paw'
+      cat: 'cat', wolf: 'dog-side', dragon: 'fire', paw: 'paw'
     };
     return map[icon] || 'package-variant';
   };
@@ -49,6 +49,28 @@ export default function InventoryScreen() {
 
   const handleUnequip = (slotType) => {
     unequipItem(slotType);
+  };
+
+  // --- GÜNCELLEME: SATIŞ MANTIĞI ---
+  const handleSell = (item) => {
+    const sellPrice = Math.floor(item.price * 0.5); // Yarı fiyatına sat
+    Alert.alert(
+        "Sell Item",
+        `Sell ${item.name} for ${sellPrice} Gold?`,
+        [
+            { text: "Cancel", style: "cancel" },
+            { 
+                text: "Sell", 
+                style: "destructive", 
+                onPress: () => {
+                    const result = sellItem(item);
+                    if(result.success) {
+                        // Opsiyonel: Başarı mesajı
+                    }
+                }
+            }
+        ]
+    );
   };
 
   return (
@@ -156,10 +178,19 @@ export default function InventoryScreen() {
                                 <Text style={styles.invStat}>
                                     +{bonusAmount} {bonusStatName}
                                 </Text>
-                                {isEquipped && (
+                                
+                                {isEquipped ? (
                                     <View style={styles.equippedBadge}>
                                         <Text style={styles.equippedText}>E</Text>
                                     </View>
+                                ) : (
+                                    // --- GÜNCELLEME: Sadece takılı değilse çöp kutusu göster ---
+                                    <TouchableOpacity 
+                                        style={styles.deleteBadge}
+                                        onPress={() => handleSell(item)}
+                                    >
+                                        <MaterialCommunityIcons name="delete" size={12} color="#FFF" />
+                                    </TouchableOpacity>
                                 )}
                             </LinearGradient>
                         </TouchableOpacity>
@@ -196,6 +227,10 @@ const styles = StyleSheet.create({
   invItemContent: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 5 },
   invName: { color: '#FFF', fontSize: 10, marginTop: 8, textAlign: 'center', fontFamily: 'Orbitron_500Medium' },
   invStat: { color: '#888', fontSize: 9, marginTop: 2, fontFamily: 'Orbitron_400Regular' },
-  equippedBadge: { position: 'absolute', top: 5, right: 5, backgroundColor: '#00F0FF', width: 16, height: 16, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  equippedText: { color: '#000', fontSize: 10, fontWeight: 'bold' }
+  
+  equippedBadge: { position: 'absolute', top: 5, right: 5, backgroundColor: '#00F0FF', width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  equippedText: { color: '#000', fontSize: 10, fontWeight: 'bold' },
+  
+  // GÜNCELLEME: Çöp Kutusu Stili
+  deleteBadge: { position: 'absolute', top: 5, right: 5, backgroundColor: '#FF3F3F', width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', zIndex: 10 }
 });

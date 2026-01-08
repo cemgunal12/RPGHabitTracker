@@ -187,6 +187,38 @@ export const GameProvider = ({ children }) => {
             };
         });
     };
+    const sellItem = (item) => {
+    setGameState(prev => {
+        // 1. Satış fiyatını belirle (Genelde alış fiyatının yarısıdır)
+        const sellPrice = Math.floor(item.price * 0.5);
+
+        // 2. Envanterden çıkar
+        // Not: Aynı ID'ye sahip birden fazla item olabilir, sadece birini siliyoruz.
+        const index = prev.inventory.findIndex(i => i.id === item.id);
+        const newInventory = [...prev.inventory];
+        if (index > -1) {
+            newInventory.splice(index, 1);
+        }
+
+        // 3. Eğer eşya kuşanılmışsa (equipped), üzerinden çıkar
+        const newEquippedItems = { ...prev.equippedItems };
+        // Slotları kontrol et, sattığımız item takılıysa orayı boşalt
+        Object.keys(newEquippedItems).forEach(slot => {
+            if (newEquippedItems[slot].id === item.id) {
+                delete newEquippedItems[slot];
+            }
+        });
+
+        return {
+            ...prev,
+            gold: prev.gold + sellPrice,
+            inventory: newInventory,
+            equippedItems: newEquippedItems
+        };
+    });
+    
+    return { success: true, message: "Item sold!" };
+};
 
     const damageBoss = (amount) => {
         setBossState(prev => {
@@ -252,7 +284,8 @@ export const GameProvider = ({ children }) => {
             earnGold,
             increaseStat,
             buyItem,
-            equipItem,   // <--- EKLENDI
+            equipItem,
+            sellItem,   // <--- EKLENDI
             unequipItem, // <--- EKLENDI
             triggerDayEnd,
             damageBoss,
