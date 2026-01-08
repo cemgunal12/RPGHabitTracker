@@ -132,6 +132,17 @@ export const SHOP_ITEMS = [
     slotType: 'companion',
   },
   {
+    id: 'companion-2',
+    name: 'Alpha Wolf',
+    description: 'A strong wolf companion',
+    price: 400,
+    category: 'companion',
+    icon: 'wolf',
+    rarity: 'epic',
+    statBonus: { stat: 'damage', amount: 3 },
+    slotType: 'companion',
+  },
+  {
     id: 'companion-3',
     name: 'Ancient Dragon',
     description: 'Legendary beast companion',
