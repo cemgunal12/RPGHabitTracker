@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, Coins } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../constants/theme';
+import { COLORS, FONTS } from '../../../constants/theme';
 
 export default function ProfileHeader({ username, level, totalStats, gold }) {
   return (

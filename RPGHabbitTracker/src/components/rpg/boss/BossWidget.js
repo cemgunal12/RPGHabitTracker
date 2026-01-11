@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { FONTS } from '../../constants/theme';
+import { FONTS } from '../../../constants/theme';
 
 export default function BossWidget({ bossData, onAttack }) {
   if (!bossData) return null;

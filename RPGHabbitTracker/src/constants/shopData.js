@@ -1,4 +1,3 @@
-// constants/shopData.js
 import React from 'react';
 import { Sword, Shield, Crown, Gem, Zap, Sparkles } from 'lucide-react-native';
 

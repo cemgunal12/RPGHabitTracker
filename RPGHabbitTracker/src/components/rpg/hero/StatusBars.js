@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS, FONTS } from '../../constants/theme';
+import { COLORS, FONTS } from '../../../constants/theme';
 
 const ProgressBar = ({ label, current, max, color, icon, gradient }) => {
   const percentage = Math.min((current / max) * 100, 100);

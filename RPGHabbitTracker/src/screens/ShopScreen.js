@@ -3,8 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'rea
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from '../context/GameContext';
-import { SHOP_ITEMS } from '../constants/shopData'; // Dosya yolunun doğruluğundan emin ol
-import { COLORS } from '../constants/theme';
+import { SHOP_ITEMS } from '../constants/shopData';
 
 export default function ShopScreen({ onPurchase }) {
   const { gameState } = useGame();
@@ -18,20 +17,15 @@ export default function ShopScreen({ onPurchase }) {
     { id: 'companion', label: 'Pets' },
   ];
 
-  const filteredItems = selectedCategory === 'all' 
-    ? SHOP_ITEMS 
+  const filteredItems = selectedCategory === 'all'
+    ? SHOP_ITEMS
     : SHOP_ITEMS.filter(item => item.category === selectedCategory);
 
   const getIconName = (icon) => {
     const map = {
       sword: 'sword', shield: 'shield', crown: 'crown', shirt: 'tshirt-crew',
       footprints: 'shoe-print', sparkles: 'star-four-points', circle: 'ring',
-      cat: 'cat', 
-      
-      // DÜZELTME BURADA: 'wolf' verisi için 'dog-side' ikonunu kullanıyoruz
-      wolf: 'dog-side', 
-      
-      dragon: 'fire', zap: 'flash'
+      cat: 'cat', wolf: 'dog-side', dragon: 'fire', zap: 'flash'
     };
     return map[icon] || 'package-variant';
   };
@@ -49,76 +43,76 @@ export default function ShopScreen({ onPurchase }) {
       {/* Header */}
       <LinearGradient colors={['rgba(138,43,226,0.2)', 'transparent']} style={styles.header}>
         <View style={styles.headerTop}>
-            <View style={{flexDirection:'row', alignItems:'center', gap: 10}}>
-                <View style={styles.iconBox}>
-                    <MaterialCommunityIcons name="shopping" size={24} color="#FFF" />
-                </View>
-                <View>
-                    <Text style={styles.title}>Equipment Shop</Text>
-                    <Text style={styles.subtitle}>Upgrade your arsenal</Text>
-                </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={styles.iconBox}>
+              <MaterialCommunityIcons name="shopping" size={24} color="#FFF" />
             </View>
-            <View style={styles.goldBadge}>
-                <MaterialCommunityIcons name="gold" size={20} color="#FFD700" />
-                <Text style={styles.goldText}>{gameState.gold}g</Text>
+            <View>
+              <Text style={styles.title}>Equipment Shop</Text>
+              <Text style={styles.subtitle}>Upgrade your arsenal</Text>
             </View>
+          </View>
+          <View style={styles.goldBadge}>
+            <MaterialCommunityIcons name="gold" size={20} color="#FFD700" />
+            <Text style={styles.goldText}>{gameState.gold}g</Text>
+          </View>
         </View>
-        
+
         {/* Categories */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
-            {categories.map(cat => (
-                <TouchableOpacity 
-                    key={cat.id} 
-                    onPress={() => setSelectedCategory(cat.id)}
-                    style={[styles.catButton, selectedCategory === cat.id && styles.catActive]}
-                >
-                    <Text style={[styles.catText, selectedCategory === cat.id && styles.catTextActive]}>
-                        {cat.label}
-                    </Text>
-                </TouchableOpacity>
-            ))}
+          {categories.map(cat => (
+            <TouchableOpacity
+              key={cat.id}
+              onPress={() => setSelectedCategory(cat.id)}
+              style={[styles.catButton, selectedCategory === cat.id && styles.catActive]}
+            >
+              <Text style={[styles.catText, selectedCategory === cat.id && styles.catTextActive]}>
+                {cat.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </LinearGradient>
 
       {/* Grid */}
       <ScrollView contentContainerStyle={styles.grid}>
         {filteredItems.map(item => {
-            const canAfford = gameState.gold >= item.price;
-            const isOwned = gameState.inventory.some(i => i.id === item.id);
-            const colors = getRarityColors(item.rarity);
+          const canAfford = gameState.gold >= item.price;
+          const isOwned = gameState.inventory.some(i => i.id === item.id);
+          const colors = getRarityColors(item.rarity);
 
-            return (
-                <TouchableOpacity 
-                    key={item.id} 
-                    disabled={!canAfford || isOwned}
-                    onPress={() => onPurchase(item)}
-                    style={[styles.card, { borderColor: colors[0] }, isOwned && styles.ownedCard]}
-                >
-                    <LinearGradient colors={colors} style={styles.cardIconBg}>
-                        <MaterialCommunityIcons name={getIconName(item.icon)} size={24} color="#FFF" />
-                    </LinearGradient>
-                    
-                    <View style={styles.rarityBadge}>
-                         <Text style={styles.rarityText}>{item.rarity}</Text>
-                    </View>
+          return (
+            <TouchableOpacity
+              key={item.id}
+              disabled={!canAfford || isOwned}
+              onPress={() => onPurchase(item)}
+              style={[styles.card, { borderColor: colors[0] }, isOwned && styles.ownedCard]}
+            >
+              <LinearGradient colors={colors} style={styles.cardIconBg}>
+                <MaterialCommunityIcons name={getIconName(item.icon)} size={24} color="#FFF" />
+              </LinearGradient>
 
-                    <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                    <Text style={styles.statText}>
-                        +{item.statBonus.amount} {item.statBonus.stat.toUpperCase()}
-                    </Text>
+              <View style={styles.rarityBadge}>
+                <Text style={styles.rarityText}>{item.rarity}</Text>
+              </View>
 
-                    <View style={styles.priceRow}>
-                        <MaterialCommunityIcons name="gold" size={14} color="#FFD700" />
-                        <Text style={styles.priceText}>{item.price}g</Text>
-                    </View>
+              <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.statText}>
+                +{item.statBonus.amount} {item.statBonus.stat.toUpperCase()}
+              </Text>
 
-                    <View style={[styles.buyBtn, (!canAfford || isOwned) && styles.disabledBtn]}>
-                        <Text style={styles.buyBtnText}>
-                            {isOwned ? 'OWNED' : canAfford ? 'BUY' : 'LOCKED'}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-            );
+              <View style={styles.priceRow}>
+                <MaterialCommunityIcons name="gold" size={14} color="#FFD700" />
+                <Text style={styles.priceText}>{item.price}g</Text>
+              </View>
+
+              <View style={[styles.buyBtn, (!canAfford || isOwned) && styles.disabledBtn]}>
+                <Text style={styles.buyBtnText}>
+                  {isOwned ? 'OWNED' : canAfford ? 'BUY' : 'LOCKED'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
         })}
       </ScrollView>
     </View>
@@ -134,7 +128,7 @@ const styles = StyleSheet.create({
   subtitle: { color: '#AAA', fontSize: 12 },
   goldBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E', padding: 8, borderRadius: 10, borderWidth: 1, borderColor: '#FFD700' },
   goldText: { color: '#FFD700', marginLeft: 5, fontWeight: 'bold' },
-  
+
   catScroll: { marginTop: 10 },
   catButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#1E1E1E', marginRight: 10, borderWidth: 1, borderColor: '#333' },
   catActive: { backgroundColor: '#8A2BE2', borderColor: '#00F0FF' },

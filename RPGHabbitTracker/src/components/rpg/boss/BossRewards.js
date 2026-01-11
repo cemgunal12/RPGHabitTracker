@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Trophy, Zap, Coins } from 'lucide-react-native';
-import { FONTS } from '../../constants/theme';
+import { FONTS } from '../../../constants/theme';
 
 export default function BossRewards({ xp, gold }) {
   return (
@@ -13,27 +13,27 @@ export default function BossRewards({ xp, gold }) {
 
       <View style={styles.list}>
         <View style={styles.row}>
-           <View style={styles.left}>
-             <Zap size={16} color="#8A2BE2" />
-             <Text style={styles.label}>Experience</Text>
-           </View>
-           <Text style={[styles.value, { color: '#8A2BE2' }]}>+{xp} XP</Text>
+          <View style={styles.left}>
+            <Zap size={16} color="#8A2BE2" />
+            <Text style={styles.label}>Experience</Text>
+          </View>
+          <Text style={[styles.value, { color: '#8A2BE2' }]}>+{xp} XP</Text>
         </View>
 
         <View style={styles.row}>
-           <View style={styles.left}>
-             <Coins size={16} color="#FFD700" />
-             <Text style={styles.label}>Gold</Text>
-           </View>
-           <Text style={[styles.value, { color: '#FFD700' }]}>+{gold}g</Text>
+          <View style={styles.left}>
+            <Coins size={16} color="#FFD700" />
+            <Text style={styles.label}>Gold</Text>
+          </View>
+          <Text style={[styles.value, { color: '#FFD700' }]}>+{gold}g</Text>
         </View>
 
         <View style={styles.row}>
-           <View style={styles.left}>
-             <Trophy size={16} color="#00F0FF" />
-             <Text style={styles.label}>Badge</Text>
-           </View>
-           <Text style={[styles.value, { color: '#00F0FF' }]}>Exclusive</Text>
+          <View style={styles.left}>
+            <Trophy size={16} color="#00F0FF" />
+            <Text style={styles.label}>Badge</Text>
+          </View>
+          <Text style={[styles.value, { color: '#00F0FF' }]}>Exclusive</Text>
         </View>
       </View>
     </View>

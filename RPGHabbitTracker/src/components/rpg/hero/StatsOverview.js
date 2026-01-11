@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, Brain, Heart, BookOpen, Coins, Sparkles } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../constants/theme';
+import { COLORS, FONTS } from '../../../constants/theme';
 
 const StatBar = ({ label, value, icon: Icon, color }) => (
   <View style={styles.statRow}>

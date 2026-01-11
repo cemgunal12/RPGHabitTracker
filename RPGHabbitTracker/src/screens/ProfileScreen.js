@@ -2,15 +2,13 @@ import React from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Text } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import HeroSection from '../components/rpg/hero/HeroSection';
+import StatusBars from '../components/rpg/hero/StatusBars';
+import StatsPentagon from '../components/rpg/hero/StatsPentagon';
+import BadgesSection from '../components/rpg/hero/BadgesSection';
+import BossWidget from '../components/rpg/boss/BossWidget';
 
-// Bileşenler
-import HeroSection from '../components/rpg/HeroSection';
-import StatusBars from '../components/rpg/StatusBars';
-import StatsPentagon from '../components/rpg/StatsPentagon';
-import BadgesSection from '../components/rpg/BadgesSection';
-import BossWidget from '../components/rpg/BossWidget';
 
-// GÜNCELLEME: onOpenCalendar ve streak prop'larını ekledik
 export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar, streak }) {
   const { gameState, boss } = useGame();
 
@@ -21,15 +19,15 @@ export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        
+
         {/* 1. Hero Section */}
         <HeroSection
           username={gameState.username}
           level={gameState.level}
           badge={gameState.equippedBadge}
           // GÜNCELLEME: Gerçek streak verisi ve tıklama fonksiyonu
-          streak={streak} 
-          onStreakPress={onOpenCalendar} 
+          streak={streak}
+          onStreakPress={onOpenCalendar}
         />
 
         {/* 2. Status Bars */}
@@ -42,35 +40,35 @@ export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar
 
         {/* 3. Stats Pentagon */}
         <View style={styles.sectionSpacing}>
-            <StatsPentagon stats={gameState.stats} />
+          <StatsPentagon stats={gameState.stats} />
         </View>
 
         {/* 4. Boss Widget */}
         <View style={styles.sectionSpacing}>
-            <BossWidget
-                bossData={boss} 
-                onAttack={onNavigateBoss}
-            />
+          <BossWidget
+            bossData={boss}
+            onAttack={onNavigateBoss}
+          />
         </View>
 
         {/* 5. Badges */}
-        <BadgesSection 
-          badges={gameState.badges} 
+        <BadgesSection
+          badges={gameState.badges}
           equippedId={gameState.equippedBadge}
           onEquip={handleEquipBadge}
         />
 
         {/* 6. Logout Button */}
         <View style={styles.logoutContainer}>
-            <TouchableOpacity 
-                style={styles.logoutButton} 
-                onPress={onLogout}
-                activeOpacity={0.7}
-            >
-                <Text style={styles.logoutText}>SYSTEM DISCONNECT</Text>
-                <MaterialCommunityIcons name="logout-variant" size={20} color="#FF4444" />
-            </TouchableOpacity>
-            <Text style={styles.versionText}>v1.0.0 Beta</Text>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={onLogout}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.logoutText}>SYSTEM DISCONNECT</Text>
+            <MaterialCommunityIcons name="logout-variant" size={20} color="#FF4444" />
+          </TouchableOpacity>
+          <Text style={styles.versionText}>v1.0.0 Beta</Text>
         </View>
 
       </ScrollView>
@@ -80,11 +78,11 @@ export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212' },
-  
-  sectionSpacing: { 
-    marginTop: 24 
+
+  sectionSpacing: {
+    marginTop: 24
   },
-  
+
   logoutContainer: {
     marginTop: 40,
     marginBottom: 20,

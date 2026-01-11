@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS } from '../../constants/theme'; 
+import { COLORS } from '../../../constants/theme'; 
 
 export default function HeroSection({ username, level, badge, streak, onStreakPress }) {
     return (

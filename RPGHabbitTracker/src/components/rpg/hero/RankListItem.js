@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { Zap } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FONTS } from '../../constants/theme';
+import { FONTS } from '../../../constants/theme';
 
 export default function RankListItem({ user }) {
   const progress = (user.level / 50) * 100; // Örnek progress mantığı

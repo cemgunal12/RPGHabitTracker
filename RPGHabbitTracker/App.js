@@ -13,31 +13,23 @@ import {
 import { useFonts, Orbitron_400Regular, Orbitron_500Medium, Orbitron_700Bold } from '@expo-google-fonts/orbitron';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
-// --- GÜNCELLEME 1: Yeni Safe Area Kütüphanesi ---
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-// --- CONTEXT ---
 import { GameProvider, useGame } from './src/context/GameContext';
 import { COLORS } from './src/constants/theme';
 
-// --- EKRANLAR ---
 import Login from './src/screens/auth/LoginScreen';
 import SignUp from './src/screens/auth/SignUpScreen';
-import Habits from './src/screens/HabitsScreen'; // Quests
+import Habits from './src/screens/HabitsScreen';
 import Profile from './src/screens/ProfileScreen';
 import Boss from './src/screens/BossScreen';
 import Shop from './src/screens/ShopScreen';
-import Inventory from './src/screens/InventoryScreen'; // INVENTORY
-import Leaderboard from './src/screens/LeaderboardScreen'; // RANKS
+import Inventory from './src/screens/InventoryScreen';
+import Leaderboard from './src/screens/LeaderboardScreen';
 
-// --- MODALS ---
-import { QuestCompleteModal } from './src/components/rpg/QuestCompleteModal';
-import CalendarModal from './src/components/rpg/CalendarModal';
+import { QuestCompleteModal } from './src/components/quest/QuestCompleteModal';
+import CalendarModal from './src/components/streak/CalendarModal';
 
-// =====================================================================
-// --- TOP BAR COMPONENT ---
-// =====================================================================
 const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
   <View style={styles.topBarWrapper}>
     <LinearGradient
@@ -80,7 +72,6 @@ const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
         </View>
       </TouchableOpacity>
 
-      {/* Sağ Taraf - Streak */}
       <TouchableOpacity
         onPress={onStreakPress}
         style={styles.streakButton}
@@ -110,7 +101,6 @@ const TopBar = ({ username, level, streak, onProfilePress, onStreakPress }) => (
   </View>
 );
 
-// --- TAB BUTTON ---
 const TabButton = ({ title, icon, isActive, onPress }) => (
   <TouchableOpacity onPress={onPress} style={styles.tabButton}>
     <MaterialCommunityIcons
@@ -214,7 +204,6 @@ const MainLayout = () => {
     );
   }
 
-  // --- GÜNCELLEME 2: SafeAreaView yeni kütüphaneden ve edges eklendi ---
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
@@ -329,7 +318,6 @@ const MainLayout = () => {
   );
 };
 
-// --- GÜNCELLEME 4: En dışı SafeAreaProvider ile sarma ---
 export default function App() {
   let [fontsLoaded] = useFonts({ Orbitron_400Regular, Orbitron_500Medium, Orbitron_700Bold });
 
@@ -382,9 +370,8 @@ const styles = StyleSheet.create({
   tabButton: { alignItems: 'center', padding: 5, flex: 1 },
   tabText: { fontSize: 9, marginTop: 4, fontFamily: 'Orbitron_500Medium' },
 
-  // GÜNCELLEME 5: Boss Butonu için Wrapper stili (Transform kullanıldı)
   bossButtonWrapper: {
-    transform: [{ translateY: -20 }], // 'top: -20' yerine bu satır eklendi
+    transform: [{ translateY: -20 }],
     zIndex: 10
   },
   centerButton: { width: 64, height: 64, borderRadius: 32, elevation: 10, shadowColor: COLORS.primary, shadowOpacity: 0.5, shadowRadius: 10 },

@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FONTS } from '../../constants/theme';
+import { FONTS } from '../../../constants/theme';
 
 export default function YourRankCard({ username, rank, level, xp }) {
   return (

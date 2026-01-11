@@ -2,24 +2,22 @@ import React from 'react';
 import { StyleSheet, View, ScrollView, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useGame } from '../context/GameContext'; 
-
-import BossHeader from '../components/rpg/BossHeader';
-import BossCardDetailed from '../components/rpg/BossCardDetailed';
-import BossRewards from '../components/rpg/BossRewards';
+import { useGame } from '../context/GameContext';
+import BossHeader from '../components/rpg/boss/BossHeader';
+import BossCardDetailed from '../components/rpg/boss/BossCardDetailed';
+import BossRewards from '../components/rpg/boss/BossRewards';
 import { FONTS } from '../constants/theme';
 
 export default function BossScreen() {
   const { gameState, boss } = useGame();
-  
+
   const isDefeated = boss.health <= 0;
 
-  // Toplam hasar hesaplama (bilgilendirme için)
   const calculateDamage = (difficulty = 'medium') => {
     let habitDamage = 100; // medium default
     if (difficulty === 'easy') habitDamage = 50;
     if (difficulty === 'hard') habitDamage = 200;
-    
+
     const characterBonus = gameState.level * 10;
     const weaponBonus = gameState.weaponDamage || 10;
     return habitDamage + characterBonus + weaponBonus;
@@ -28,18 +26,18 @@ export default function BossScreen() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100, paddingTop: 20 }}>
-        
-        <BossHeader 
-          bossNumber={boss.bossNumber} 
-          totalBosses={boss.totalBosses} 
+
+        <BossHeader
+          bossNumber={boss.bossNumber}
+          totalBosses={boss.totalBosses}
         />
 
         <View style={{ height: 20 }} />
 
-        <BossCardDetailed 
-          boss={boss} 
-          isDefeated={isDefeated} 
-          userLevel={gameState.level} 
+        <BossCardDetailed
+          boss={boss}
+          isDefeated={isDefeated}
+          userLevel={gameState.level}
         />
 
         {/* BİLGİLENDİRME KUTUSU */}
@@ -53,11 +51,11 @@ export default function BossScreen() {
                 <MaterialCommunityIcons name="information" size={24} color="#00F0FF" />
                 <Text style={styles.infoTitle}>How to Deal Damage</Text>
               </View>
-              
+
               <Text style={styles.infoText}>
                 Complete quests to automatically damage the boss!
               </Text>
-              
+
               <View style={styles.damageInfo}>
                 <View style={styles.damageRow}>
                   <View style={styles.damageLabel}>
@@ -66,7 +64,7 @@ export default function BossScreen() {
                   </View>
                   <Text style={styles.damageValue}>{calculateDamage('easy')} DMG</Text>
                 </View>
-                
+
                 <View style={styles.damageRow}>
                   <View style={styles.damageLabel}>
                     <View style={[styles.dot, { backgroundColor: '#FFD700' }]} />
@@ -74,7 +72,7 @@ export default function BossScreen() {
                   </View>
                   <Text style={styles.damageValue}>{calculateDamage('medium')} DMG</Text>
                 </View>
-                
+
                 <View style={styles.damageRow}>
                   <View style={styles.damageLabel}>
                     <View style={[styles.dot, { backgroundColor: '#FF1744' }]} />
@@ -105,9 +103,9 @@ export default function BossScreen() {
           </View>
         )}
 
-        <BossRewards 
-          xp={100 * boss.bossNumber} 
-          gold={200 * boss.bossNumber} 
+        <BossRewards
+          xp={100 * boss.bossNumber}
+          gold={200 * boss.bossNumber}
         />
 
       </ScrollView>
@@ -116,11 +114,11 @@ export default function BossScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#121212' 
+  container: {
+    flex: 1,
+    backgroundColor: '#121212'
   },
-  
+
   // Bilgilendirme Kutusu
   infoContainer: {
     marginHorizontal: 20,
@@ -196,7 +194,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     flex: 1,
   },
-  
+
   // Defeated Container
   defeatedContainer: {
     marginHorizontal: 20,

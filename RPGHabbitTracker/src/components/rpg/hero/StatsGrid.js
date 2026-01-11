@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { FONTS } from '../../constants/theme';
+import { FONTS } from '../../../constants/theme';
 
 const StatItem = ({ icon, label, value, color }) => (
   <View style={[styles.card, { borderColor: `${color}4D` }]}>

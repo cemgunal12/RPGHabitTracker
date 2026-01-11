@@ -1,19 +1,16 @@
 import React from 'react';
 import { StyleSheet, View, ScrollView, Text } from 'react-native';
 import { Medal, Star } from 'lucide-react-native';
-import { useGame } from '../context/GameContext'; 
-
-// Components
-import LeaderboardHeader from '../components/rpg/LeaderboardHeader';
-import YourRankCard from '../components/rpg/YourRankCard';
-import Podium from '../components/rpg/Podium';
-import RankListItem from '../components/rpg/RankListItem';
+import { useGame } from '../context/GameContext';
+import LeaderboardHeader from '../components/leaderboard/LeaderboardHeader';
+import YourRankCard from '../components/rpg/hero/YourRankCard';
+import Podium from '../components/leaderboard/Podium';
+import RankListItem from '../components/rpg/hero/RankListItem';
 import { FONTS } from '../constants/theme';
 
 export default function LeaderboardScreen() {
   const { gameState } = useGame();
 
-  // Mock Data (Web kodundan uyarlandı)
   const leaderboardData = [
     { rank: 1, username: 'DragonSlayer99', level: 45, xp: 125430, avatar: `https://api.dicebear.com/7.x/adventurer/png?seed=DragonSlayer99` },
     { rank: 2, username: 'QuestMaster', level: 42, xp: 118920, avatar: `https://api.dicebear.com/7.x/adventurer/png?seed=QuestMaster` },
@@ -34,10 +31,10 @@ export default function LeaderboardScreen() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        
+
         <LeaderboardHeader />
 
-        <YourRankCard 
+        <YourRankCard
           username={gameState.username}
           level={gameState.level}
           xp={gameState.currentXP}
@@ -48,10 +45,10 @@ export default function LeaderboardScreen() {
 
         <View style={styles.listSection}>
           <View style={styles.listHeader}>
-             <Medal size={20} color="#60A5FA" />
-             <Text style={styles.listTitle}>League Table</Text>
+            <Medal size={20} color="#60A5FA" />
+            <Text style={styles.listTitle}>League Table</Text>
           </View>
-          
+
           {restOfList.map((user) => (
             <RankListItem key={user.rank} user={user} />
           ))}
@@ -59,11 +56,11 @@ export default function LeaderboardScreen() {
 
         {/* Footer Info */}
         <View style={styles.footer}>
-           <View style={{flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center'}}>
-             <Star size={14} color="#C084FC" />
-             <Text style={styles.footerTitle}>Weekly Reset</Text>
-           </View>
-           <Text style={styles.footerText}>Compete for top ranks and exclusive rewards</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+            <Star size={14} color="#C084FC" />
+            <Text style={styles.footerTitle}>Weekly Reset</Text>
+          </View>
+          <Text style={styles.footerText}>Compete for top ranks and exclusive rewards</Text>
         </View>
 
       </ScrollView>

@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Skull, Trophy } from 'lucide-react-native';
-import { FONTS } from '../../constants/theme';
+import { FONTS } from '../../../constants/theme';
 
 export default function BossHeader({ bossNumber, totalBosses }) {
   return (

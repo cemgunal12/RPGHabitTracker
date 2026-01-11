@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, Check, Plus, Zap, Sparkles } from 'lucide-react-native';
-
-// --- FIX HERE ---
-// Only go up one folder (to src):
+import { Target, Plus, Check, Zap, Sparkles } from 'lucide-react-native';
 import { COLORS, FONTS } from '../constants/theme';
-
-// Import newly created components
-// (Their paths already looked correct: ../components/...)
-import HabitCard from '../components/rpg/HabitCard';
-import AddHabitModal from '../components/rpg/AddHabitModal';
+import HabitCard from '../components/quest/HabitCard';
+import AddHabitModal from '../components/quest/AddHabitModal';
 
 export default function Habits({ habits, onCompleteHabit, onAddHabit, onDeleteHabit }) {
     const [showAddForm, setShowAddForm] = useState(false);

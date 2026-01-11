@@ -3,7 +3,7 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'rea
 import { LinearGradient } from 'expo-linear-gradient';
 import { X } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
-import StreakCalendar from './StreakCalendar';
+import StreakCalendar from '../streak/StreakCalendar';
 
 const { height } = Dimensions.get('window');
 

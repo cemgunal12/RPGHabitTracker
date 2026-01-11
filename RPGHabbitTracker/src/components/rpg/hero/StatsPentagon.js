@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import Svg, { Polygon, Line, Circle, Text as SvgText } from 'react-native-svg';
-import { FONTS, COLORS } from '../../constants/theme';
+import { FONTS, COLORS } from '../../../constants/theme';
 
 export default function StatsPentagon({ stats }) {
   // 1. Safety Check: Default to 0 if stats are missing to prevent crash

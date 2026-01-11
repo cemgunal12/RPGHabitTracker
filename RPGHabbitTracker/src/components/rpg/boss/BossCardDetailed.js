@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Trophy, Swords, Shield } from 'lucide-react-native';
-import { FONTS } from '../../constants/theme';
+import { FONTS } from '../../../constants/theme';
 
 export default function BossCardDetailed({ boss, isDefeated, userLevel }) {
   const healthPercentage = (boss.health / boss.maxHealth) * 100;
@@ -11,12 +11,12 @@ export default function BossCardDetailed({ boss, isDefeated, userLevel }) {
     <View style={[styles.card, isDefeated ? styles.cardDefeated : styles.cardActive]}>
       {/* Image Section */}
       <View style={styles.imageContainer}>
-        <Image 
-          source={{ uri: boss.imageUrl }} 
-          style={[styles.image, isDefeated && { opacity: 0.5 }]} 
+        <Image
+          source={{ uri: boss.imageUrl }}
+          style={[styles.image, isDefeated && { opacity: 0.5 }]}
         />
         <LinearGradient colors={['transparent', '#1E1E1E']} style={styles.imageOverlay} />
-        
+
         {/* Badges */}
         <View style={[styles.badge, isDefeated ? styles.badgeGreen : styles.badgeRed]}>
           {isDefeated ? <Trophy size={14} color="#FFF" /> : <Swords size={14} color="#FFF" />}
@@ -67,20 +67,20 @@ export default function BossCardDetailed({ boss, isDefeated, userLevel }) {
         {/* Status Box */}
         <View style={[styles.statusBox, isDefeated ? styles.statusGreen : styles.statusRed]}>
           {isDefeated ? (
-            <View style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
-               <Trophy size={24} color="#00FF88" />
-               <View>
-                 <Text style={styles.statusTitle}>Victory!</Text>
-                 <Text style={styles.statusSub}>The next boss awaits...</Text>
-               </View>
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+              <Trophy size={24} color="#00FF88" />
+              <View>
+                <Text style={styles.statusTitle}>Victory!</Text>
+                <Text style={styles.statusSub}>The next boss awaits...</Text>
+              </View>
             </View>
           ) : (
-            <View style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
-               <Swords size={24} color="#FF3F3F" />
-               <View>
-                 <Text style={styles.statusTitle}>Attack!</Text>
-                 <Text style={styles.statusSub}>Complete quests to deal damage.</Text>
-               </View>
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+              <Swords size={24} color="#FF3F3F" />
+              <View>
+                <Text style={styles.statusTitle}>Attack!</Text>
+                <Text style={styles.statusSub}>Complete quests to deal damage.</Text>
+              </View>
             </View>
           )}
         </View>
