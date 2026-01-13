@@ -5,8 +5,6 @@ import { Alert } from 'react-native';
 const GameContext = createContext();
 
 // --- SABİT VERİLER ---
-
-// 4 Bosslu Liste
 const BOSSES = [
   {
     id: 'boss-1',
@@ -53,13 +51,23 @@ const INITIAL_STATE = {
     stats: { mind: 10, vitality: 10, knowledge: 10, wealth: 10, creativity: 10 },
     inventory: [], 
     badges: [],
-    equippedItems: {}, // { weapon: item, shield: item, etc. }
-    weaponDamage: 10, // Varsayılan el hasarı
+    habits: [], // <--- YENİ EKLENDİ: Alışkanlıkları burada tutacağız
+    equippedItems: {}, 
+    weaponDamage: 10, 
 };
 
 const INITIAL_BOSS_STATE = {
     index: 0,
     currentHealth: BOSSES[0].maxHealth
+};
+
+// Tarih formatlayıcı (Calendar ile uyumlu olması için)
+const getTodayString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
 export const GameProvider = ({ children }) => {
@@ -99,6 +107,8 @@ export const GameProvider = ({ children }) => {
         totalBosses: BOSSES.length
     };
 
+    // --- TEMEL OYUN FONKSİYONLARI ---
+
     const gainXp = (amount) => {
         setGameState((prev) => {
             let newXP = prev.currentXP + amount;
@@ -119,12 +129,13 @@ export const GameProvider = ({ children }) => {
         setGameState(prev => ({ ...prev, stats: { ...prev.stats, [key]: (prev.stats[key] || 0) + amount } }));
     };
 
+    // --- MARKET SİSTEMİ ---
+
     const buyItem = (item) => {
         if (gameState.gold < item.price) return { success: false, message: "Not enough gold!" };
         if (gameState.inventory.find(i => i.id === item.id)) return { success: false, message: "Owned!" };
         
         setGameState(prev => {
-            // Statları kalıcı olarak ekle (Passive Bonus)
             const statsToUpdate = { ...prev.stats };
             if (item.description.includes("Mind")) statsToUpdate.mind += 5;
             else if (item.description.includes("Vitality")) statsToUpdate.vitality += 5;
@@ -142,83 +153,46 @@ export const GameProvider = ({ children }) => {
         return { success: true, message: `Purchased ${item.name}!` };
     };
 
-    // --- YENİ EKLENEN: ITEM KUŞANMA (EQUIP) ---
-    const equipItem = (item) => {
-        // Eğer item'in slotType'ı yoksa varsayılan olarak 'misc' veya hata döndürebilirsin
-        const slot = item.slotType || 'weapon';
-
+    const sellItem = (item) => {
         setGameState(prev => {
-            // Yeni kuşanılan itemleri oluştur
-            const newEquippedItems = {
-                ...prev.equippedItems,
-                [slot]: item // O slot'a yeni itemi koy (eskisi varsa ezilir)
-            };
+            const sellPrice = Math.floor(item.price * 0.5);
+            const index = prev.inventory.findIndex(i => i.id === item.id);
+            const newInventory = [...prev.inventory];
+            if (index > -1) newInventory.splice(index, 1);
 
-            // Opsiyonel: Eğer silah takıldıysa 'weaponDamage' güncelle
+            const newEquippedItems = { ...prev.equippedItems };
+            Object.keys(newEquippedItems).forEach(slot => {
+                if (newEquippedItems[slot].id === item.id) delete newEquippedItems[slot];
+            });
+
+            return { ...prev, gold: prev.gold + sellPrice, inventory: newInventory, equippedItems: newEquippedItems };
+        });
+        return { success: true, message: "Item sold!" };
+    };
+
+    const equipItem = (item) => {
+        const slot = item.slotType || 'weapon';
+        setGameState(prev => {
+            const newEquippedItems = { ...prev.equippedItems, [slot]: item };
             let newWeaponDamage = prev.weaponDamage;
             if (slot === 'weapon' && item.statBonus?.stat === 'damage') {
-                newWeaponDamage = 10 + item.statBonus.amount; // Base 10 + Silah Gücü
+                newWeaponDamage = 10 + item.statBonus.amount;
             }
-
-            return {
-                ...prev,
-                equippedItems: newEquippedItems,
-                weaponDamage: newWeaponDamage
-            };
+            return { ...prev, equippedItems: newEquippedItems, weaponDamage: newWeaponDamage };
         });
     };
 
-    // --- YENİ EKLENEN: ITEM ÇIKARMA (UNEQUIP) ---
     const unequipItem = (slot) => {
         setGameState(prev => {
             const newEquippedItems = { ...prev.equippedItems };
-            delete newEquippedItems[slot]; // Slotu temizle
-
-            // Eğer silah çıkarıldıysa hasarı düşür
+            delete newEquippedItems[slot];
             let newWeaponDamage = prev.weaponDamage;
-            if (slot === 'weapon') {
-                newWeaponDamage = 10; // Base hasara dön
-            }
-
-            return {
-                ...prev,
-                equippedItems: newEquippedItems,
-                weaponDamage: newWeaponDamage
-            };
+            if (slot === 'weapon') newWeaponDamage = 10;
+            return { ...prev, equippedItems: newEquippedItems, weaponDamage: newWeaponDamage };
         });
     };
-    const sellItem = (item) => {
-    setGameState(prev => {
-        // 1. Satış fiyatını belirle (Genelde alış fiyatının yarısıdır)
-        const sellPrice = Math.floor(item.price * 0.5);
 
-        // 2. Envanterden çıkar
-        // Not: Aynı ID'ye sahip birden fazla item olabilir, sadece birini siliyoruz.
-        const index = prev.inventory.findIndex(i => i.id === item.id);
-        const newInventory = [...prev.inventory];
-        if (index > -1) {
-            newInventory.splice(index, 1);
-        }
-
-        // 3. Eğer eşya kuşanılmışsa (equipped), üzerinden çıkar
-        const newEquippedItems = { ...prev.equippedItems };
-        // Slotları kontrol et, sattığımız item takılıysa orayı boşalt
-        Object.keys(newEquippedItems).forEach(slot => {
-            if (newEquippedItems[slot].id === item.id) {
-                delete newEquippedItems[slot];
-            }
-        });
-
-        return {
-            ...prev,
-            gold: prev.gold + sellPrice,
-            inventory: newInventory,
-            equippedItems: newEquippedItems
-        };
-    });
-    
-    return { success: true, message: "Item sold!" };
-};
+    // --- BOSS SAVAŞ SİSTEMİ ---
 
     const damageBoss = (amount) => {
         setBossState(prev => {
@@ -265,13 +239,63 @@ export const GameProvider = ({ children }) => {
             }
 
             if (playerDied) {
-                setBossState(bs => ({
-                    ...bs,
-                    currentHealth: BOSSES[bs.index].maxHealth
-                }));
+                setBossState(bs => ({ ...bs, currentHealth: BOSSES[bs.index].maxHealth }));
             }
 
             return { ...prev, health: newHealth };
+        });
+    };
+
+    // --- HABIT (ALIŞKANLIK) SİSTEMİ [YENİ EKLENDİ] ---
+
+    const addHabit = (habit) => {
+        setGameState(prev => ({
+            ...prev,
+            habits: [...prev.habits, { ...habit, id: Date.now().toString(), completionDates: [] }]
+        }));
+    };
+
+    const deleteHabit = (habitId) => {
+        setGameState(prev => ({
+            ...prev,
+            habits: prev.habits.filter(h => h.id !== habitId)
+        }));
+    };
+
+    // Görevi Yapma / Geri Alma Fonksiyonu
+    const toggleHabit = (habitId) => {
+        const today = getTodayString(); // "2026-01-13"
+
+        setGameState(prev => {
+            const habitIndex = prev.habits.findIndex(h => h.id === habitId);
+            if (habitIndex === -1) return prev;
+
+            const habit = prev.habits[habitIndex];
+            const isCompletedToday = habit.completionDates.includes(today);
+
+            let newCompletionDates;
+            if (isCompletedToday) {
+                // UNCHECK (Geri Al)
+                newCompletionDates = habit.completionDates.filter(d => d !== today);
+                // Not: XP/Gold geri almıyoruz (istenirse eklenebilir), ama Boss canını geri eklemiyoruz.
+            } else {
+                // CHECK (Tamamla)
+                newCompletionDates = [...habit.completionDates, today];
+                
+                // ÖDÜLLERİ VER
+                // 1. XP Kazan
+                gainXp(10); 
+                // 2. Altın Kazan
+                earnGold(5);
+                // 3. Boss'a Vur (Eldeki silah hasarı kadar)
+                damageBoss(prev.weaponDamage);
+            }
+
+            // State'i güncelle
+            const updatedHabits = [...prev.habits];
+            updatedHabits[habitIndex] = { ...habit, completionDates: newCompletionDates };
+
+            return { ...prev, habits: updatedHabits };
         });
     };
 
@@ -280,16 +304,23 @@ export const GameProvider = ({ children }) => {
             gameState,
             boss: activeBoss,
             loading,
+            // Temel Fonksiyonlar
             gainXp,
             earnGold,
             increaseStat,
+            setUsername: (name) => setGameState(prev => ({ ...prev, username: name })),
+            // Market & Eşya
             buyItem,
             equipItem,
-            sellItem,   // <--- EKLENDI
-            unequipItem, // <--- EKLENDI
+            sellItem,
+            unequipItem,
+            // Boss
             triggerDayEnd,
             damageBoss,
-            setUsername: (name) => setGameState(prev => ({ ...prev, username: name }))
+            // Alışkanlıklar (Calendar ve Home Screen için gerekli)
+            addHabit,
+            deleteHabit,
+            toggleHabit, 
         }}>
             {children}
         </GameContext.Provider>

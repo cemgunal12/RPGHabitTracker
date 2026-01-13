@@ -3,11 +3,23 @@ import { StyleSheet, Text, View, Dimensions } from 'react-native';
 import { Flame, Calendar as CalendarIcon, TrendingUp } from 'lucide-react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
-// HATA ÖNLEYİCİ: Eğer theme dosyan yoksa veya hatalıysa diye varsayılan renkler
-import { FONTS, COLORS } from '../../constants/theme'; 
+import { FONTS } from '../../constants/theme'; 
 
 const { width } = Dimensions.get('window');
 const CELL_SIZE = (width - 60) / 7;
+
+// --- YARDIMCI: İki tarih aynı gün mü? (Saat farkını siler) ---
+const isSameDay = (date1, date2) => {
+  if (!date1 || !date2) return false;
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+};
 
 // --- Dairesel İlerleme Çubuğu ---
 const RadialProgress = ({ percent, day, isToday }) => {
@@ -21,30 +33,36 @@ const RadialProgress = ({ percent, day, isToday }) => {
 
   const radius = 14;
   const circumference = 2 * Math.PI * radius;
-  // NaN hatasını önlemek için || 0 ekledik
-  const strokeDashoffset = circumference - ((percent || 0) / 100) * circumference;
+  // NaN veya undefined gelirse 0 kabul et
+  const safePercent = isNaN(percent) ? 0 : percent;
+  
+  // Yüzdelik hesaplama (Tersi alınır çünkü strokeDashoffset boşluğu temsil eder)
+  const strokeDashoffset = circumference - (safePercent / 100) * circumference;
 
   const getStrokeColor = () => {
-    if (percent >= 100) return '#8A2BE2';
-    if (percent >= 50) return '#8A2BE2';
-    return '#3A3A3A';
+    if (safePercent >= 100) return '#8A2BE2'; // Tamamlandı (Mor)
+    if (safePercent > 0) return '#00F0FF';    // Başlandı (Mavi)
+    return '#3A3A3A';                         // Boş (Gri)
   };
 
   return (
     <View style={styles.cellContent}>
       <Svg height="36" width="36" style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
+        {/* Arka plan dairesi (Gri) */}
         <Circle cx="18" cy="18" r={radius} stroke="#2A2A2A" strokeWidth="2.5" fill="none" />
+        
+        {/* İlerleme dairesi (Renkli) */}
         <Circle
           cx="18" cy="18" r={radius}
           stroke={getStrokeColor()}
           strokeWidth="2.5"
           fill="none"
           strokeDasharray={circumference}
-          strokeDashoffset={isNaN(strokeDashoffset) ? circumference : strokeDashoffset} // NaN koruması
+          strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
         />
       </Svg>
-      <Text style={[styles.dayText, isToday && styles.todayText, percent >= 100 && styles.completedText]}>
+      <Text style={[styles.dayText, isToday && styles.todayText, safePercent >= 100 && styles.completedText]}>
         {day}
       </Text>
       {isToday && <View style={styles.todayIndicator} />}
@@ -53,43 +71,61 @@ const RadialProgress = ({ percent, day, isToday }) => {
 };
 
 // --- Ana Takvim Bileşeni ---
-// GÜNCELLEME: habits undefined gelirse boş dizi [] ata
 export default function StreakCalendar({ habits = [], currentStreak = 0 }) {
   
-  const getCompletionForDate = (dateString) => {
-    // HATA ÖNLEYİCİ: habits yoksa işlem yapma
-    if (!habits) return 0;
+  // Belirli bir tarih için % hesapla
+  const getCompletionForDate = (targetDateObj) => {
+    // 1. Eğer hiç alışkanlık yoksa 0 döndür
+    if (!habits || habits.length === 0) return 0;
 
-    const dailyHabits = habits.filter(h => h.type === 'daily');
-    if (dailyHabits.length === 0) return 0;
-    
-    const completedCount = dailyHabits.filter(h => 
-      h.completionDates && h.completionDates.includes(dateString)
-    ).length;
-    
-    return (completedCount / dailyHabits.length) * 100;
+    // 2. O tarihte tamamlanması gereken toplam görev sayısı
+    // (İstersen burada sadece 'daily' olanları filtreleyebilirsin ama projeleri de istedin)
+    const totalTasks = habits.length;
+
+    if (totalTasks === 0) return 0;
+
+    // 3. O tarihte tamamlanan görev sayısı
+    const completedCount = habits.filter(h => {
+      // completionDates dizisi var mı kontrol et
+      if (!h.completionDates || !Array.isArray(h.completionDates)) return false;
+
+      // Dizinin içindeki tarihlerin herhangi biri hedef tarihle aynı gün mü?
+      return h.completionDates.some(completedDate => isSameDay(completedDate, targetDateObj));
+    }).length;
+
+    // 4. Yüzdeyi Hesapla
+    return (completedCount / totalTasks) * 100;
   };
 
   const generateMonthDays = () => {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startDayOfWeek = firstDay.getDay();
+    
+    // Ayın kaç çektiğini bul
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // Ayın ilk gününün haftanın hangi günü olduğunu bul (Pazar=0)
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    
     const days = [];
     
-    for (let i = 0; i < startDayOfWeek; i++) { days.push(null); }
+    // Ayın başındaki boşluklar
+    for (let i = 0; i < firstDayOfWeek; i++) { days.push(null); }
+    
+    // Günleri doldur
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      // Tarih formatını habits verinle eşleştirdiğinden emin ol (YYYY-MM-DD)
-      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const isPast = date <= today;
-      const isToday = date.toDateString() === today.toDateString();
+      const dateObj = new Date(year, month, day);
+      
+      const isPastOrToday = dateObj <= today; 
+      const isToday = isSameDay(dateObj, today);
+
       days.push({
-        day, dateString, isPast, isToday,
-        completionPercent: isPast ? getCompletionForDate(dateString) : null,
+        day,
+        dateObj, // Date objesini sakla
+        isPast: isPastOrToday,
+        isToday,
+        // Sadece geçmiş ve bugün için hesaplama yap
+        completionPercent: isPastOrToday ? getCompletionForDate(dateObj) : null,
       });
     }
     return days;
@@ -97,11 +133,13 @@ export default function StreakCalendar({ habits = [], currentStreak = 0 }) {
 
   const monthDays = generateMonthDays();
   const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+  
+  // %100 olan gün sayısı
   const perfectDays = monthDays.filter(d => d && d.completionPercent >= 100).length;
 
   return (
     <View style={styles.container}>
-      {/* İstatistik Kartları */}
+      {/* İstatistikler */}
       <View style={styles.statsRow}>
         <LinearGradient colors={['rgba(255, 23, 68, 0.2)', 'transparent']} style={styles.statCard}>
           <View style={styles.statHeader}>
@@ -122,20 +160,20 @@ export default function StreakCalendar({ habits = [], currentStreak = 0 }) {
         </LinearGradient>
       </View>
 
-      {/* Ay Başlığı */}
+      {/* Takvim Başlığı */}
       <View style={styles.monthHeader}>
         <CalendarIcon size={16} color="#00F0FF" />
         <Text style={styles.monthText}>{currentMonth}</Text>
       </View>
       
-      {/* Legend */}
+      {/* Legend (Açıklama) */}
       <View style={styles.legend}>
         <LegendItem color="#8A2BE2" label="100%" filled />
-        <LegendItem color="#8A2BE2" label="50%" dashed />
+        <LegendItem color="#00F0FF" label="Doing" dashed /> 
         <LegendItem color="#3A3A3A" label="0%" outline />
       </View>
 
-      {/* Takvim Grid */}
+      {/* Grid */}
       <View style={styles.calendarContainer}>
         <View style={styles.weekRow}>
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <Text key={i} style={styles.weekText}>{d}</Text>)}
@@ -144,20 +182,24 @@ export default function StreakCalendar({ habits = [], currentStreak = 0 }) {
           {monthDays.map((dayData, index) => (
             <View key={index} style={styles.dayCell}>
               {dayData ? (
-                <RadialProgress percent={dayData.completionPercent} day={dayData.day} isToday={dayData.isToday} />
+                <RadialProgress 
+                  percent={dayData.completionPercent} 
+                  day={dayData.day} 
+                  isToday={dayData.isToday} 
+                />
               ) : <View />}
             </View>
           ))}
         </View>
       </View>
 
-      {/* Mesaj Kutusu */}
+      {/* Mesaj */}
       <LinearGradient colors={['rgba(138, 43, 226, 0.2)', 'rgba(0, 240, 255, 0.2)']} style={styles.messageBox}>
          <View style={{flexDirection:'row', gap: 10, alignItems: 'center'}}>
             <Flame size={20} color="#FF1744" />
             <View>
-              <Text style={styles.messageTitle}>Keep it up!</Text>
-              <Text style={styles.messageText}>You are building a powerful habit.</Text>
+              <Text style={styles.messageTitle}>Keep going!</Text>
+              <Text style={styles.messageText}>Every habit counts towards your success.</Text>
             </View>
          </View>
       </LinearGradient>
