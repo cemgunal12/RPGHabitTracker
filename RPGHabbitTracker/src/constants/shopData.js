@@ -1,5 +1,9 @@
 import React from 'react';
-import { Sword, Shield, Crown, Gem, Zap, Sparkles } from 'lucide-react-native';
+// 1. Gerekli İkonları Import Ediyoruz
+import {
+  Sword, Shield, Crown, Gem, Zap, Sparkles,
+  Cat, Dog, Ghost, Shirt, Footprints, Circle, Package
+} from 'lucide-react-native';
 
 export const SHOP_ITEMS = [
   // Weapons
@@ -101,7 +105,7 @@ export const SHOP_ITEMS = [
     description: 'Enhanced movement',
     price: 450,
     category: 'armor',
-    icon: 'sparkles',
+    icon: 'boots',
     rarity: 'epic',
     statBonus: { stat: 'health', amount: 30 },
     slotType: 'boots',
@@ -136,7 +140,7 @@ export const SHOP_ITEMS = [
     description: 'A strong wolf companion',
     price: 400,
     category: 'companion',
-    icon: 'dog-side',
+    icon: 'wolf',
     rarity: 'epic',
     statBonus: { stat: 'damage', amount: 3 },
     slotType: 'companion',
@@ -167,14 +171,34 @@ export const SHOP_ITEMS = [
 
 // Helper Functions
 export const getIcon = (iconName, color = '#FFF', size = 32) => {
+  // Gelen isme göre doğru ikonu döndür
   switch (iconName) {
+    // Silahlar & Zırhlar
     case 'sword': return <Sword size={size} color={color} />;
     case 'shield': return <Shield size={size} color={color} />;
     case 'crown': return <Crown size={size} color={color} />;
+    case 'shirt': return <Shirt size={size} color={color} />;
+
+    // BURASI DÜZELTİLDİ:
+    case 'boots': return <Footprints size={size} color={color} />; // 'boots' gelince Footprints
+
+    // Aksesuarlar
+    case 'circle': return <Circle size={size} color={color} />;
     case 'gem': return <Gem size={size} color={color} />;
+
+    // Yoldaşlar (Companions)
+    case 'cat': return <Cat size={size} color={color} />;
+
+    // BURASI DÜZELTİLDİ:
+    case 'wolf': return <Skull size={size} color={color} />;
+    case 'dragon': return <Ghost size={size} color={color} />; // 'dragon' gelince Ghost
+
+    // Tüketilebilirler
     case 'zap': return <Zap size={size} color={color} />;
     case 'sparkles': return <Sparkles size={size} color={color} />;
-    default: return <Sword size={size} color={color} />;
+
+    // Hiçbiri değilse varsayılan
+    default: return <Package size={size} color={color} />;
   }
 };
 

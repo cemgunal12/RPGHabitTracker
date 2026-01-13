@@ -1,9 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert, Image } from 'react-native';
-import { Shield, Sword, Crown, Trash2, PackageOpen } from 'lucide-react-native';
-import { FONTS, COLORS } from '../../../constants/theme';
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import { Shield, Trash2, PackageOpen } from 'lucide-react-native';
+import { FONTS } from '../../../constants/theme';
 import { useGame } from '../../../context/GameContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+// ÖNEMLİ DEĞİŞİKLİK: getIcon fonksiyonunu buradan çekiyoruz
+// (Dosya yolunuzun doğru olduğundan emin olun, genelde ../../../constants/shopData şeklindedir)
+import { getIcon } from '../../../constants/shopData'; 
 
 export default function InventoryGrid() {
   const { gameState, sellItem } = useGame();
@@ -23,19 +26,6 @@ export default function InventoryGrid() {
         }
       ]
     );
-  };
-
-  // İkon Seçici (Lucide veya MaterialIcon kullanabilirsin)
-  const renderIcon = (iconName, color) => {
-    // Basitlik için MaterialCommunityIcons kullanıyoruz, senin sistemine göre ayarlayabilirsin
-    const map = {
-      sword: 'sword', shield: 'shield', crown: 'crown', shirt: 'tshirt-crew',
-      footprints: 'shoe-print', sparkles: 'sparkles', circle: 'ring',
-      cat: 'cat', dog: 'dog', dragon: 'fire', paw: 'paw'
-    };
-    const mciName = map[iconName] || 'package-variant';
-
-    return <MaterialCommunityIcons name={mciName} size={24} color={color} />;
   };
 
   const getRarityColor = (rarity) => {
@@ -63,13 +53,13 @@ export default function InventoryGrid() {
               key={`${item.id}-${index}`}
               style={[styles.slot, { borderColor: getRarityColor(item.rarity) }]}
             >
-              {/* Eşya İkonu */}
-              {renderIcon(item.icon, getRarityColor(item.rarity))}
+              {/* Eşya İkonu - Artık shopData'dan gelen fonksiyonu kullanıyor */}
+              {getIcon(item.icon, getRarityColor(item.rarity), 24)}
 
               {/* Eşya İsmi */}
               <Text style={styles.slotName} numberOfLines={1}>{item.name}</Text>
 
-              {/* --- ÇÖP KUTUSU BUTONU (SAĞ ÜST) --- */}
+              {/* --- ÇÖP KUTUSU BUTONU --- */}
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleSellRequest(item)}
@@ -80,7 +70,7 @@ export default function InventoryGrid() {
                 </View>
               </TouchableOpacity>
 
-              {/* Fiyat Etiketi (Opsiyonel) */}
+              {/* Satış Fiyatı */}
               <Text style={styles.sellPriceText}>+{Math.floor(item.price * 0.5)}g</Text>
             </View>
           ))}
@@ -117,10 +107,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    // justifyContent: 'space-between' // Sola dayalı olması daha düzgün durur
   },
   slot: {
-    width: '30%', // 3'lü grid için
+    width: '30%', // Grid yapısı
     aspectRatio: 0.9,
     backgroundColor: '#121212',
     borderRadius: 12,
@@ -129,7 +118,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     padding: 5,
-    position: 'relative', // Delete butonu için gerekli
+    position: 'relative',
   },
   slotName: {
     color: '#DDD',
@@ -137,8 +126,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     textAlign: 'center'
   },
-
-  // Çöp Kutusu Stilleri
   deleteButton: {
     position: 'absolute',
     top: -6,
@@ -155,14 +142,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   sellPriceText: {
     color: '#FFD700',
     fontSize: 8,
     fontFamily: FONTS.regular,
     marginTop: 2
   },
-
   emptyState: {
     alignItems: 'center',
     paddingVertical: 20,
