@@ -1,16 +1,26 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Text } from 'react-native';
+import React, { useState } from 'react'; // 1. useState EKLENDİ
+import { StyleSheet, View, ScrollView, TouchableOpacity, Text, Modal, TouchableWithoutFeedback } from 'react-native'; // 2. Modal bileşenleri EKLENDİ
 import { useGame } from '../context/GameContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+// --- BİLEŞENLER (Senin klasör yapına uygun) ---
 import HeroSection from '../components/rpg/hero/HeroSection';
 import StatusBars from '../components/rpg/hero/StatusBars';
 import StatsPentagon from '../components/rpg/hero/StatsPentagon';
 import BadgesSection from '../components/rpg/hero/BadgesSection';
 import BossWidget from '../components/rpg/boss/BossWidget';
 
+// 3. StatsOverview BİLEŞENİNİ IMPORT ET
+// Eğer bu dosyayı "src/components/rpg/" içine kaydettiysen:
+import StatsOverview from '../components/rpg/hero/StatsOverview';
+// EĞER "src/components/rpg/hero/" içine taşıdıysan yolunu şöyle güncelle:
+// import StatsOverview from '../components/rpg/hero/StatsOverview';
 
 export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar, streak }) {
   const { gameState, boss } = useGame();
+  
+  // 4. STATE TANIMLAMASI (Hata veren kısım burasıydı)
+  const [modalVisible, setModalVisible] = useState(false);
 
   const handleEquipBadge = (badgeId) => {
     console.log("Equipping badge:", badgeId);
@@ -25,7 +35,6 @@ export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar
           username={gameState.username}
           level={gameState.level}
           badge={gameState.equippedBadge}
-          // GÜNCELLEME: Gerçek streak verisi ve tıklama fonksiyonu
           streak={streak}
           onStreakPress={onOpenCalendar}
         />
@@ -38,9 +47,19 @@ export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar
           maxXP={gameState.maxXP}
         />
 
-        {/* 3. Stats Pentagon */}
+        {/* 3. Stats Pentagon (Tıklanabilir) */}
         <View style={styles.sectionSpacing}>
-          <StatsPentagon stats={gameState.stats} />
+            <TouchableOpacity 
+                activeOpacity={0.8}
+                onPress={() => setModalVisible(true)} // Artık hata vermez
+            >
+                <StatsPentagon stats={gameState.stats} />
+                
+                <View style={styles.hintContainer}>
+                    <MaterialCommunityIcons name="gesture-tap" size={14} color="#666" />
+                    <Text style={styles.clickHint}>Tap for details</Text>
+                </View>
+            </TouchableOpacity>
         </View>
 
         {/* 4. Boss Widget */}
@@ -72,6 +91,35 @@ export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar
         </View>
 
       </ScrollView>
+
+      {/* --- 5. STATS MODAL (POP-UP) --- */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1} 
+            onPress={() => setModalVisible(false)}
+        >
+            <TouchableWithoutFeedback>
+                <View style={styles.modalContent}>
+                    <TouchableOpacity 
+                        style={styles.closeButton} 
+                        onPress={() => setModalVisible(false)}
+                    >
+                        <MaterialCommunityIcons name="close" size={24} color="#FFF" />
+                    </TouchableOpacity>
+
+                    {/* Grid Bileşeni */}
+                    <StatsOverview stats={gameState.stats} />
+                </View>
+            </TouchableWithoutFeedback>
+        </TouchableOpacity>
+      </Modal>
+
     </View>
   );
 }
@@ -83,6 +131,43 @@ const styles = StyleSheet.create({
     marginTop: 24
   },
 
+  // --- EKSİK OLAN STİLLER EKLENDİ ---
+  hintContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -15,
+    marginBottom: 10,
+    gap: 5
+  },
+  clickHint: {
+    color: '#666',
+    fontSize: 10,
+    fontFamily: 'Orbitron_400Regular'
+  },
+
+  // Modal Stilleri
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+    marginBottom: -10,
+    padding: 10,
+    zIndex: 10
+  },
+
+  // Logout Stilleri
   logoutContainer: {
     marginTop: 40,
     marginBottom: 20,

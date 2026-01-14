@@ -24,7 +24,7 @@ export default function InventoryScreen() {
     const getIconName = (icon) => {
         const map = {
             sword: 'sword', shield: 'shield', crown: 'crown', shirt: 'tshirt-crew',
-            footprints: 'shoe-print', sparkles: 'star-four-points', circle: 'ring',
+            footprints: 'shoe-print', sparkles: 'creation', circle: 'ring',
             cat: 'cat', wolf: 'dog-side', dragon: 'fire', paw: 'paw'
         };
         return map[icon] || 'package-variant';
