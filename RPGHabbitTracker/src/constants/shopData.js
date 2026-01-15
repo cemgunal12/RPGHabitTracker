@@ -1,12 +1,10 @@
 import React from 'react';
-// 1. Gerekli İkonları Import Ediyoruz
 import {
   Sword, Shield, Crown, Gem, Zap, Sparkles,
   Cat, Dog, Ghost, Shirt, Footprints, Circle, Package
 } from 'lucide-react-native';
 
 export const SHOP_ITEMS = [
-  // Weapons
   {
     id: 'weapon-1',
     name: 'Iron Blade',
@@ -40,7 +38,6 @@ export const SHOP_ITEMS = [
     statBonus: { stat: 'damage', amount: 30 },
     slotType: 'weapon',
   },
-  // Shields
   {
     id: 'shield-1',
     name: 'Wooden Shield',
@@ -63,7 +60,6 @@ export const SHOP_ITEMS = [
     statBonus: { stat: 'defense', amount: 10 },
     slotType: 'shield',
   },
-  // Helmets
   {
     id: 'helmet-1',
     name: 'Iron Helmet',
@@ -75,7 +71,6 @@ export const SHOP_ITEMS = [
     statBonus: { stat: 'defense', amount: 2 },
     slotType: 'helmet',
   },
-  // Chest Armor
   {
     id: 'chest-1',
     name: 'Leather Vest',
@@ -98,7 +93,6 @@ export const SHOP_ITEMS = [
     statBonus: { stat: 'defense', amount: 25 },
     slotType: 'chest',
   },
-  // Boots
   {
     id: 'boots-2',
     name: 'Swift Boots',
@@ -110,7 +104,6 @@ export const SHOP_ITEMS = [
     statBonus: { stat: 'health', amount: 30 },
     slotType: 'boots',
   },
-  // Rings
   {
     id: 'ring-3',
     name: 'Gold Ring',
@@ -122,7 +115,6 @@ export const SHOP_ITEMS = [
     statBonus: { stat: 'xp', amount: 25 },
     slotType: 'ring',
   },
-  // Companions
   {
     id: 'companion-1',
     name: 'Brave Cat',
@@ -156,7 +148,6 @@ export const SHOP_ITEMS = [
     statBonus: { stat: 'damage', amount: 20 },
     slotType: 'companion',
   },
-  // Consumables
   {
     id: 'consumable-1',
     name: 'XP Potion',
@@ -169,35 +160,20 @@ export const SHOP_ITEMS = [
   },
 ];
 
-// Helper Functions
 export const getIcon = (iconName, color = '#FFF', size = 32) => {
-  // Gelen isme göre doğru ikonu döndür
   switch (iconName) {
-    // Silahlar & Zırhlar
     case 'sword': return <Sword size={size} color={color} />;
     case 'shield': return <Shield size={size} color={color} />;
     case 'crown': return <Crown size={size} color={color} />;
     case 'shirt': return <Shirt size={size} color={color} />;
-
-    // BURASI DÜZELTİLDİ:
-    case 'boots': return <Footprints size={size} color={color} />; // 'boots' gelince Footprints
-
-    // Aksesuarlar
+    case 'boots': return <Footprints size={size} color={color} />;
     case 'circle': return <Circle size={size} color={color} />;
     case 'gem': return <Gem size={size} color={color} />;
-
-    // Yoldaşlar (Companions)
     case 'cat': return <Cat size={size} color={color} />;
-
-    // BURASI DÜZELTİLDİ:
     case 'wolf': return <Skull size={size} color={color} />;
-    case 'dragon': return <Ghost size={size} color={color} />; // 'dragon' gelince Ghost
-
-    // Tüketilebilirler
+    case 'dragon': return <Ghost size={size} color={color} />;
     case 'zap': return <Zap size={size} color={color} />;
     case 'sparkles': return <Sparkles size={size} color={color} />;
-
-    // Hiçbiri değilse varsayılan
     default: return <Package size={size} color={color} />;
   }
 };
