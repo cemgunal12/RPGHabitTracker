@@ -30,12 +30,12 @@ export default function InventoryScreen() {
         return map[icon] || 'package-variant';
     };
 
-    // Renk belirleyici (Shop ile aynı)
+    // Renk belirleyici
     const getRarityColors = (rarity) => {
         switch (rarity) {
             case 'legendary': return ['#FFD700', '#FFA500'];
             case 'epic': return ['#8A2BE2', '#9370DB'];
-            default: return ['#00F0FF', '#0099CC']; // Rare
+            default: return ['#00F0FF', '#0099CC'];
         }
     };
 

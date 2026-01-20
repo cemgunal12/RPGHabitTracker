@@ -11,10 +11,7 @@ import BadgesSection from '../components/rpg/hero/BadgesSection';
 import BossWidget from '../components/rpg/boss/BossWidget';
 
 // 3. StatsOverview BİLEŞENİNİ IMPORT ET
-// Eğer bu dosyayı "src/components/rpg/" içine kaydettiysen:
 import StatsOverview from '../components/rpg/hero/StatsOverview';
-// EĞER "src/components/rpg/hero/" içine taşıdıysan yolunu şöyle güncelle:
-// import StatsOverview from '../components/rpg/hero/StatsOverview';
 
 export default function ProfileScreen({ onLogout, onNavigateBoss, onOpenCalendar, streak }) {
   const { gameState, boss } = useGame();

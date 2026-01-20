@@ -22,7 +22,6 @@ export default function LeaderboardScreen() {
     { rank: 8, username: 'DailyChamp', level: 25, xp: 71800, avatar: `https://api.dicebear.com/7.x/adventurer/png?seed=DailyChamp` },
   ];
 
-  // Kullanıcının rankını rastgele hesapla (Mock)
   const currentUserRank = 15;
 
   const topThree = leaderboardData.slice(0, 3);

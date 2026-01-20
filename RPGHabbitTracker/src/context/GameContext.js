@@ -51,7 +51,7 @@ const INITIAL_STATE = {
     stats: { mind: 10, vitality: 10, knowledge: 10, wealth: 10, creativity: 10 },
     inventory: [], 
     badges: [],
-    habits: [], // <--- YENİ EKLENDİ: Alışkanlıkları burada tutacağız
+    habits: [],
     equippedItems: {}, 
     weaponDamage: 10, 
 };
@@ -61,7 +61,7 @@ const INITIAL_BOSS_STATE = {
     currentHealth: BOSSES[0].maxHealth
 };
 
-// Tarih formatlayıcı (Calendar ile uyumlu olması için)
+// Tarih formatlayıcı 
 const getTodayString = () => {
     const d = new Date();
     const year = d.getFullYear();
